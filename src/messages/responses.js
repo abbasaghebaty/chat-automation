@@ -8,8 +8,8 @@ export const responses = {
     text: `
 مغازه ما بین هنرور ۲۰ و ۲۲ قرار دارد.
 
-ایتای ما:
-@YOUR_EITA_USERNAME
+کانال ایتا و روبیکا:
+@Shoma_shop
 `,
 
     buttons: [
@@ -27,10 +27,8 @@ export const responses = {
   price: {
     type: "text",
     text: `
-قیمت محصول:
-
-200,000 تومان
-`
+جهت مشاهده کامل محصولات و قیمت ها ، لطفا عضو کانال ما در ایتا یا روبیکا شوید :
+@shoma_shop
   },
 
   support: {
@@ -38,7 +36,7 @@ export const responses = {
     text: `
 برای ارتباط با پشتیبانی:
 
-@YourUsername
+@Shoma_shop_sup
 `
   },
 
@@ -46,7 +44,7 @@ export const responses = {
     type: "text",
     text: `
 سلام.
-چطور می‌تونم کمکت کنم؟
+جانم درخدمتم
 `
   }
 };
