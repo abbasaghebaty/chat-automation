@@ -14,7 +14,7 @@ https://maps.google.com/
 200,000 تومان
 `,
 
-  contact: `
+  support: `
 برای ارتباط با پشتیبانی:
 
 @YourUsername
