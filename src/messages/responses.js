@@ -2,36 +2,46 @@
  * پاسخ‌های قابل استفاده توسط automationها.
  *
  * کلیدهای این object باید دقیقاً با مقدار response در automation.js یکی باشند.
- * اگر automation جدیدی اضافه شد، نبودن کلید متناظر باعث می‌شود پاسخ ارسال نشود.
+ * هر automation جدید باید یک response متناظر داشته باشد.
+ *
+ * لینک کانال‌ها عمداً هم داخل متن آمده و هم به شکل Inline Keyboard ارسال می‌شود:
+ * - متن برای کاربری که ترجیح می‌دهد مستقیم روی لینک بزند
+ * - دکمه برای دسترسی سریع‌تر و ظاهر مرتب‌تر
  */
 export const responses = {
   address: {
-    type: "location",
-    latitude: 36.325273576311425,
-    longitude: 59.60890905931591,
-    text: "مشهد ، بین هنرور 20 و 22",
+    type: "text",
+    text: "مشهد، بین هنرور ۲۰ و ۲۲ قرار دارد."
+  },
+
+  // قیمت ثابت از دیتابیس/API در پروژه وجود ندارد؛ بنابراین کاربر باید
+  // نام محصول را بفرستد تا در آینده بتوان این بخش را به قیمت واقعی وصل کرد.
+  price: {
+    type: "text",
+    text: "اسم محصول رو بفرستید تا قیمتش رو اعلام کنیم."
+  },
+
+  products: {
+    type: "text",
+    text:
+      "برای مشاهده محصولات و اجناس، به کانال‌های ما در ایتا و روبیکا سر بزنید:\n\n" +
+      "ایتا: https://eitaa.com/shoma_shop\n" +
+      "روبیکا: https://rubika.ir/shoma_shop\n\n" +
+      "آیدی کانال در هر دو پلتفرم: @shoma_shop",
     buttons: [
       [
         {
-          text: "نشان",
-          url: "https://nshn.ir/35Qb1MaUIJjDVc",
+          text: "کانال ایتا",
+          url: "https://eitaa.com/shoma_shop",
           style: "primary"
         },
         {
-          text: "Google Maps",
-          url: "https://maps.app.goo.gl/Haixv2k28U9JJi878",
+          text: "کانال روبیکا",
+          url: "https://rubika.ir/shoma_shop",
           style: "primary"
         }
       ]
     ]
-  },
-
-  // قبلاً automation مربوط به price وجود داشت ولی این پاسخ اصلاً تعریف نشده بود.
-  // قیمت ثابت از دیتابیس/API در پروژه وجود ندارد؛ بنابراین پاسخ امن و کاربردی
-  // کاربر را به ارسال نام محصول هدایت می‌کند.
-  price: {
-    type: "text",
-    text: "اسم محصول رو بفرستید تا قیمتش رو اعلام کنیم."
   },
 
   hello: {
