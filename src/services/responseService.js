@@ -1,4 +1,3 @@
-```js
 import { InlineKeyboard } from "grammy";
 import { responses } from "../messages/responses.js";
 
