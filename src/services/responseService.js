@@ -1,3 +1,4 @@
+```js
 import { InlineKeyboard } from "grammy";
 import { responses } from "../messages/responses.js";
 
@@ -19,17 +20,23 @@ export async function sendResponse(ctx, automation) {
       ? InlineKeyboard.from(response.buttons)
       : undefined;
 
+    // ارسال لوکیشن + دکمه‌ها
     await ctx.replyWithLocation(
       response.latitude,
       response.longitude,
       {
-        caption: response.caption,
         reply_markup: keyboard
       }
     );
+
+    // ارسال متن آدرس در پیام بعدی
+    if (response.text) {
+      await ctx.reply(response.text);
+    }
 
     return;
   }
 
   console.error(`Unknown response type: ${response.type}`);
 }
+```
