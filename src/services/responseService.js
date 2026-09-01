@@ -48,8 +48,8 @@ function buildKeyboard(buttonRows = []) {
 /**
  * پاسخ را بر اساس نوع آن ارسال می‌کند.
  *
- * نکته مهم: برای متن‌هایی که لینک Markdown دارند، parse_mode باید Markdown باشد؛
- * وگرنه [@Shoma\_shop](...) به‌صورت متن خام نمایش داده می‌شود.
+ * نکته مهم: برای متن‌هایی که لینک HTML دارند، parse_mode باید Markdown باشد؛
+ * وگرنه <a href="...">@Shoma_shop</a> به‌صورت متن خام نمایش داده می‌شود.
  * اگر response دکمه هم داشته باشد، همان دکمه‌ها زیر پیام قرار می‌گیرند.
  */
 export async function sendResponse(ctx, automation) {
@@ -64,7 +64,7 @@ export async function sendResponse(ctx, automation) {
     case "text": {
       const keyboard = buildKeyboard(response.buttons);
       const options = {
-        parse_mode: "Markdown",
+        parse_mode: "HTML",
         ...(keyboard ? { reply_markup: keyboard } : {})
       };
 
