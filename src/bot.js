@@ -15,11 +15,10 @@ import {
   getStoreStatusPopup
 } from "./services/storeHoursService.js";
 
-/**
- * ساخت Bot و ثبت handlerها.
- */
+
 function createBot(token) {
   const bot = new Bot(token);
+
 
   /**
    * Telegram Business Connection
@@ -29,174 +28,171 @@ function createBot(token) {
     handleBusinessConnection
   );
 
+
   /**
-   * Telegram Business messages
+   * Telegram Business Messages
    */
   bot.on(
     "business_message",
     handleBusinessMessage
   );
 
+
   /**
-   * بررسی لحظه‌ای ساعت کاری.
-   *
-   * پیام اصلی edit نمی‌شود.
-   * وضعیت فقط هنگام کلیک محاسبه می‌شود.
+   * بررسی لحظه‌ای ساعت کاری
    */
   bot.callbackQuery(
     "check_store_hours",
     async (ctx) => {
+
       try {
+
         const result =
           getStoreStatusPopup();
 
-        await ctx.answerCallbackQuery(
-          {
-            text:
-              `${result.title}\n\n${result.message}`,
 
-            show_alert:
-              true
-          }
-        );
+        await ctx.answerCallbackQuery({
+          text:
+            `${result.title}\n\n${result.message}`,
+
+          show_alert: true
+        });
+
+
       } catch (error) {
+
         console.error(
-          "Store hours callback failed:",
+          "Store hours callback error:",
           error
         );
 
-        /**
-         * حتی در صورت خطا،
-         * Telegram را از حالت loading خارج کن.
-         */
-        try {
-          await ctx.answerCallbackQuery(
-            {
-              text:
-                "امکان بررسی ساعت کاری وجود نداشت.",
 
-              show_alert:
-                true
-            }
-          );
-        } catch (
-          callbackError
-        ) {
-          console.error(
-            "Failed to answer store-hours callback:",
-            callbackError
-          );
-        }
+        await ctx.answerCallbackQuery({
+          text:
+            "خطا در بررسی ساعت کاری",
+
+          show_alert: true
+        });
+
       }
     }
   );
 
-  /**
-   * خطای عمومی Bot
-   */
+
   bot.catch((error) => {
+
     console.error(
       "Bot error:",
       error
     );
+
   });
+
 
   return bot;
 }
 
+
+
 /**
- * بررسی امنیت webhook.
+ * بررسی Secret فقط اگر تنظیم شده باشد
+ *
+ * اگر WEBHOOK_SECRET وجود نداشت:
+ * ربات همچنان کار می‌کند.
+ *
+ * اگر وجود داشت:
+ * درخواست‌های جعلی رد می‌شوند.
  */
 function isAuthorizedWebhook(
   request,
   env
 ) {
+
   if (!env.WEBHOOK_SECRET) {
-    return false;
+
+    return true;
+
   }
+
 
   const receivedSecret =
     request.headers.get(
       "X-Telegram-Bot-Api-Secret-Token"
     );
 
+
   return (
     receivedSecret ===
     env.WEBHOOK_SECRET
   );
+
 }
 
+
+
 export default {
+
   async fetch(
     request,
     env
   ) {
+
+
     /**
      * Health check
      */
     if (
       request.method === "GET"
     ) {
+
       return new Response(
         "Chat Automation Worker is running."
       );
+
     }
 
+
+
     /**
-     * فقط POST برای webhook
+     * فقط POST
      */
     if (
       request.method !== "POST"
     ) {
+
       return new Response(
         "Method Not Allowed",
         {
-          status: 405,
-
-          headers: {
-            Allow:
-              "GET, POST"
-          }
+          status: 405
         }
       );
+
     }
 
-    /**
-     * BOT_TOKEN
-     */
+
+
     if (!env.BOT_TOKEN) {
+
       console.error(
-        "BOT_TOKEN is missing."
+        "BOT_TOKEN missing"
       );
 
+
       return new Response(
-        "BOT_TOKEN is not configured.",
+        "BOT_TOKEN missing",
         {
           status: 500
         }
       );
+
     }
 
-    /**
-     * WEBHOOK_SECRET
-     */
-    if (
-      !env.WEBHOOK_SECRET
-    ) {
-      console.error(
-        "WEBHOOK_SECRET is missing."
-      );
 
-      return new Response(
-        "WEBHOOK_SECRET is not configured.",
-        {
-          status: 500
-        }
-      );
-    }
 
     /**
-     * جلوگیری از درخواست‌های جعلی
+     * بررسی webhook secret
+     *
+     * فقط وقتی Secret فعال شده باشد.
      */
     if (
       !isAuthorizedWebhook(
@@ -204,33 +200,42 @@ export default {
         env
       )
     ) {
+
+      console.error(
+        "Unauthorized webhook request"
+      );
+
+
       return new Response(
         "Unauthorized",
         {
           status: 401
         }
       );
+
     }
 
-    /**
-     * ساخت Bot
-     */
+
+
     const bot =
       createBot(
         env.BOT_TOKEN
       );
 
-    /**
-     * اتصال webhook به Cloudflare Workers
-     */
+
+
     const handleUpdate =
       webhookCallback(
         bot,
         "cloudflare-mod"
       );
 
+
+
     return handleUpdate(
       request
     );
+
   }
+
 };
