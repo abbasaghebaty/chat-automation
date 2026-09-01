@@ -84,6 +84,22 @@ export const automations = [
   },
 
   {
+    id: "website",
+    enabled: true,
+    keywords: [
+      "سایت",
+      "وب سایت",
+      "وبسایت",
+      "آدرس سایت",
+      "سایت شما",
+      "سایت فروشگاه",
+      "لینک سایت"
+    ],
+    response: "website",
+    priority: 87
+  },
+
+  {
     id: "contact",
     enabled: true,
     keywords: [
