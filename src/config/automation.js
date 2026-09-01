@@ -1,44 +1,68 @@
 export const automations = [
   {
-    name: "address",
+    id: "address",
+
+    enabled: true,
+
     keywords: [
       "آدرس",
       "ادرس",
-      "آدرس کجاست",
-      "ادرس کجاست"
+      "لوکیشن",
+      "مکان"
     ],
-    response: "address"
+
+    response: "address",
+
+    priority: 100
   },
 
   {
-    name: "price",
+    id: "price",
+
+    enabled: true,
+
     keywords: [
       "قیمت",
       "قیمتش",
       "چنده",
-      "قیمت محصول"
+      "چند",
+      "هزینه"
     ],
-    response: "price"
+
+    response: "price",
+
+    priority: 90
   },
 
   {
-    name: "contact",
+    id: "support",
+
+    enabled: true,
+
     keywords: [
       "پشتیبانی",
+      "ادمین",
       "تماس",
-      "ارتباط",
-      "ادمین"
+      "ارتباط"
     ],
-    response: "contact"
+
+    response: "support",
+
+    priority: 80
   },
 
   {
-    name: "hello",
+    id: "hello",
+
+    enabled: true,
+
     keywords: [
       "سلام",
-      "درود",
-      "های"
+      "درود"
     ],
-    response: "hello"
+
+    response: "hello",
+
+    priority: 10
   }
 ];
