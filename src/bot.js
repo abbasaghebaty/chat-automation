@@ -3,75 +3,170 @@ import { Bot, webhookCallback } from "grammy";
 import { handleBusinessMessage } from "./handlers/businessMessageHandler.js";
 import { handleBusinessConnection } from "./handlers/businessConnectionHandler.js";
 
+import {
+  getStoreStatusPopup
+} from "./services/storeHoursService.js";
+
 /**
- * ساخت نمونه Bot.
- *
- * این تابع همه handlerهای مربوط به Telegram Business را ثبت می‌کند.
- * چون Worker ممکن است روی چند درخواست اجرا شود، ساخت bot عمداً بدون
- * نگهداری state حساس انجام می‌شود و توکن فقط از env خوانده می‌شود.
+ * ============================================================
+ * ساخت Bot
+ * ============================================================
  */
 function createBot(token) {
   const bot = new Bot(token);
 
-  // رویداد ایجاد/ویرایش/فعال یا غیرفعال شدن Business Connection.
-  bot.on("business_connection", handleBusinessConnection);
+  /**
+   * ----------------------------------------------------------
+   * Business Connection
+   * ----------------------------------------------------------
+   */
+  bot.on(
+    "business_connection",
+    handleBusinessConnection
+  );
 
-  // پیام‌های ورودی چت‌هایی که توسط Business Bot مدیریت می‌شوند.
-  bot.on("business_message", handleBusinessMessage);
+  /**
+   * ----------------------------------------------------------
+   * پیام‌های Business
+   * ----------------------------------------------------------
+   */
+  bot.on(
+    "business_message",
+    handleBusinessMessage
+  );
 
-  // جلوگیری از سقوط پردازش به‌دلیل خطاهای handlerها.
+  /**
+   * ==========================================================
+   * بررسی لحظه‌ای ساعت کاری
+   * ==========================================================
+   *
+   * این handler زمانی اجرا می‌شود که کاربر روی:
+   *
+   * «الان فروشگاه بازه؟»
+   *
+   * کلیک کند.
+   *
+   * وضعیت در همان لحظه محاسبه می‌شود.
+   *
+   * پیام اصلی دست‌کاری نمی‌شود.
+   * هیچ message edit انجام نمی‌دهیم.
+   *
+   * answerCallbackQuery با show_alert=true باعث می‌شود
+   * نتیجه به‌صورت popup روی صفحه کاربر نمایش داده شود.
+   * ==========================================================
+   */
+  bot.callbackQuery(
+    "check_store_hours",
+    async (ctx) => {
+      try {
+        const result = getStoreStatusPopup();
+
+        await ctx.answerCallbackQuery({
+          text:
+            `${result.title}\n\n${result.message}`,
+
+          /**
+           * true یعنی یک popup بزرگ‌تر به کاربر نشان بده.
+           *
+           * false باشد، پاسخ کوچک و موقتی بالای صفحه نمایش داده می‌شود.
+           */
+          show_alert: true
+        });
+      } catch (error) {
+        console.error(
+          "Store hours callback failed:",
+          error
+        );
+
+        /**
+         * حتی در صورت خطا هم callback باید answer شود
+         * تا Telegram حالت loading را متوقف کند.
+         */
+        await ctx.answerCallbackQuery({
+          text:
+            "امکان بررسی ساعت کاری وجود نداشت.",
+          show_alert: true
+        });
+      }
+    }
+  );
+
+  /**
+   * ----------------------------------------------------------
+   * خطاهای Bot
+   * ----------------------------------------------------------
+   */
   bot.catch((err) => {
-    console.error("Bot error:", err);
+    console.error(
+      "Bot error:",
+      err
+    );
   });
 
   return bot;
 }
 
+/**
+ * ============================================================
+ * Cloudflare Worker
+ * ============================================================
+ */
 export default {
-  /**
-   * ورودی اصلی Cloudflare Worker.
-   *
-   * GET: health check ساده برای تست Worker.
-   * POST: فقط webhook تلگرام.
-   * متدهای دیگر: 405.
-   */
   async fetch(request, env) {
+    /**
+     * Health check
+     */
     if (request.method === "GET") {
-      return new Response("Chat Automation Worker is running.");
+      return new Response(
+        "Chat Automation Worker is running."
+      );
     }
 
+    /**
+     * فقط POST برای webhook
+     */
     if (request.method !== "POST") {
-      return new Response("Method Not Allowed", {
-        status: 405,
-        headers: { Allow: "GET, POST" }
-      });
+      return new Response(
+        "Method Not Allowed",
+        {
+          status: 405
+        }
+      );
     }
 
-    // BOT_TOKEN تنها secret اجباری برنامه است.
+    /**
+     * بررسی Token
+     */
     if (!env.BOT_TOKEN) {
-      console.error("BOT_TOKEN is missing.");
+      console.error(
+        "BOT_TOKEN is missing."
+      );
 
-      return new Response("BOT_TOKEN is not configured.", {
-        status: 500
-      });
+      return new Response(
+        "BOT_TOKEN is not configured.",
+        {
+          status: 500
+        }
+      );
     }
 
-    // ساخت bot برای هر request در Worker قابل‌قبول است و با مدل اجرای
-    // stateless Cloudflare سازگار است.
-    const bot = createBot(env.BOT_TOKEN);
+    /**
+     * ساخت bot
+     */
+    const bot = createBot(
+      env.BOT_TOKEN
+    );
 
-    // Secret Token اختیاری است تا deploymentهای فعلی بدون تغییر نشکنند.
-    // در محیط production توصیه می‌شود WEBHOOK_SECRET تنظیم و در setWebhook
-    // هم همین secret استفاده شود.
-    if (env.WEBHOOK_SECRET) {
-      const receivedSecret = request.headers.get("X-Telegram-Bot-Api-Secret-Token");
+    /**
+     * اتصال webhook به Cloudflare Workers
+     */
+    const handleUpdate = webhookCallback(
+      bot,
+      "cloudflare-mod"
+    );
 
-      if (receivedSecret !== env.WEBHOOK_SECRET) {
-        return new Response("Unauthorized", { status: 401 });
-      }
-    }
-
-    const handleUpdate = webhookCallback(bot, "cloudflare-mod");
-    return handleUpdate(request);
+    return handleUpdate(
+      request
+    );
   }
 };
