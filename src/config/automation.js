@@ -7,6 +7,10 @@
  * - keywords: عبارت‌هایی که باید در متن پیدا شوند
  * - response: کلیدی که به messages/responses.js اشاره می‌کند
  * - priority: هرچه بیشتر باشد، rule زودتر بررسی می‌شود
+ *
+ * نکته توسعه:
+ * برای اضافه کردن یک پاسخ جدید، باید هم یک automation اینجا ساخته شود
+ * و هم کلید متناظر آن در messages/responses.js وجود داشته باشد.
  */
 export const automations = [
   {
@@ -22,6 +26,25 @@ export const automations = [
     keywords: ["قیمت", "قیمتش", "چنده", "هزینه", "چند"],
     response: "price",
     priority: 90
+  },
+  {
+    id: "products",
+    enabled: true,
+    keywords: [
+      "محصول",
+      "محصولات",
+      "جنس",
+      "جنسها",
+      "اجناس",
+      "کالا",
+      "کالاها",
+      "موجودی",
+      "چی دارید",
+      "چه دارید",
+      "چه محصولاتی"
+    ],
+    response: "products",
+    priority: 85
   },
   {
     id: "support",
