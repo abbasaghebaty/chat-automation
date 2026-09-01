@@ -2,10 +2,10 @@ import { InlineKeyboard } from "grammy";
 import { responses } from "../messages/responses.js";
 
 /**
- * ساخت inline keyboard از config ساده‌ی پروژه.
+ * ساخت Inline Keyboard از تنظیمات response.
  *
- * به‌جای عبور مستقیم object خام به grammY، buttonها با API رسمی InlineKeyboard
- * ساخته می‌شوند تا shape نهایی کاملاً مشخص و قابل کنترل باشد.
+ * style: primary یعنی استایل استاندارد آبی تلگرام.
+ * این تابع فقط URL buttonهای فعلی پروژه را می‌سازد تا ساختار config ساده بماند.
  */
 function buildKeyboard(buttonRows = []) {
   if (!Array.isArray(buttonRows) || buttonRows.length === 0) {
@@ -23,21 +23,18 @@ function buildKeyboard(buttonRows = []) {
     }
 
     for (const button of row) {
-      if (!button?.text) {
+      if (!button?.text || !button?.url) {
         continue;
       }
 
-      // فعلاً config فقط URL button دارد؛ این branch عمداً محدود نگه داشته شده.
-      if (button.url) {
-        keyboard.url(button.text, button.url);
-        buttonCount += 1;
+      keyboard.url(button.text, button.url);
 
-        // grammY style() همیشه روی آخرین دکمه اضافه‌شده اعمال می‌شود.
-        // بنابراین باید بلافاصله بعد از url() فراخوانی شود.
-        if (button.style) {
-          keyboard.style(button.style);
-        }
+      // style باید بلافاصله بعد از ساخت همان دکمه اعمال شود.
+      if (button.style) {
+        keyboard.style(button.style);
       }
+
+      buttonCount += 1;
     }
 
     if (rowIndex < buttonRows.length - 1) {
@@ -49,11 +46,11 @@ function buildKeyboard(buttonRows = []) {
 }
 
 /**
- * ارسال پاسخ بر اساس نوع response.
+ * پاسخ را بر اساس نوع آن ارسال می‌کند.
  *
- * grammY برای business_message، context shortcutها را به business connection
- * مربوط می‌کند؛ بنابراین ctx.reply و ctx.replyWithLocation می‌توانند از طرف
- * همان Business Account ارسال شوند، مشروط به داشتن can_reply.
+ * نکته مهم: برای متن‌هایی که لینک Markdown دارند، parse_mode باید Markdown باشد؛
+ * وگرنه [@Shoma\_shop](...) به‌صورت متن خام نمایش داده می‌شود.
+ * اگر response دکمه هم داشته باشد، همان دکمه‌ها زیر پیام قرار می‌گیرند.
  */
 export async function sendResponse(ctx, automation) {
   const response = responses[automation?.response];
@@ -64,15 +61,20 @@ export async function sendResponse(ctx, automation) {
   }
 
   switch (response.type) {
-    case "text":
-      await ctx.reply(response.text);
+    case "text": {
+      const keyboard = buildKeyboard(response.buttons);
+      const options = {
+        parse_mode: "Markdown",
+        ...(keyboard ? { reply_markup: keyboard } : {})
+      };
+
+      await ctx.reply(response.text, options);
       return;
+    }
 
     case "location": {
       const keyboard = buildKeyboard(response.buttons);
-      const options = keyboard
-        ? { reply_markup: keyboard }
-        : undefined;
+      const options = keyboard ? { reply_markup: keyboard } : undefined;
 
       await ctx.replyWithLocation(
         response.latitude,
