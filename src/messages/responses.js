@@ -9,7 +9,7 @@ export const responses = {
     type: "location",
     latitude: 36.325273576311425,
     longitude: 59.60890905931591,
-    text: "مغازه ما بین هنرور ۲۰ و ۲۲ قرار دارد.",
+    text: "مشهد ، بین هنرور 20 و 22",
     buttons: [
       [
         {
