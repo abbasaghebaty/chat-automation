@@ -1,12 +1,17 @@
 {
   "name": "telegram-chat-automation",
   "version": "1.0.0",
+  "private": true,
   "type": "module",
   "scripts": {
-    "start": "node src/bot.js"
+    "dev": "wrangler dev",
+    "deploy": "wrangler deploy",
+    "start": "wrangler dev"
   },
   "dependencies": {
-    "dotenv": "^16.0.0",
-    "grammy": "^1.0.0"
+    "grammy": "^1.46.0"
+  },
+  "devDependencies": {
+    "wrangler": "^4.127.1"
   }
 }
