@@ -1,16 +1,39 @@
-import "dotenv/config";
-import { Bot } from "grammy";
+import { Bot, webhookCallback } from "grammy";
 
 import { handleMessage } from "./handlers/messageHandler.js";
 
-const bot = new Bot(process.env.BOT_TOKEN);
+function createBot(token) {
+  const bot = new Bot(token);
 
-bot.on("message:text", handleMessage);
+  bot.on("message:text", handleMessage);
 
-bot.catch((error) => {
-  console.error("Bot error:", error);
-});
+  bot.catch((error) => {
+    console.error("Bot error:", error);
+  });
 
-console.log("Bot is running...");
+  return bot;
+}
 
-bot.start();
+export default {
+  async fetch(request, env) {
+    // Health check
+    if (request.method === "GET") {
+      return new Response("Chat Automation Bot is running.");
+    }
+
+    if (!env.BOT_TOKEN) {
+      return new Response("BOT_TOKEN is not configured.", {
+        status: 500
+      });
+    }
+
+    const bot = createBot(env.BOT_TOKEN);
+
+    const handleUpdate = webhookCallback(
+      bot,
+      "cloudflare-mod"
+    );
+
+    return handleUpdate(request);
+  }
+};
