@@ -6,7 +6,9 @@
   "scripts": {
     "dev": "wrangler dev",
     "deploy": "wrangler deploy",
-    "start": "wrangler dev"
+    "start": "wrangler dev",
+    "check": "node --check src/bot.js && node --check src/config/automation.js && node --check src/handlers/businessConnectionHandler.js && node --check src/handlers/businessMessageHandler.js && node --check src/handlers/messageHandler.js && node --check src/messages/responses.js && node --check src/services/keywordMatcher.js && node --check src/services/responseService.js && node --check src/services/storeHoursService.js",
+    "test": "node --test tests/core.test.js"
   },
   "dependencies": {
     "grammy": "^1.46.0"
