@@ -2,10 +2,21 @@ import { InlineKeyboard } from "grammy";
 import { responses } from "../messages/responses.js";
 
 /**
- * ساخت Inline Keyboard از تنظیمات response.
+ * ============================================================
+ * ساخت Inline Keyboard
+ * ============================================================
  *
- * style: primary یعنی استایل استاندارد آبی تلگرام.
- * این تابع فقط URL buttonهای فعلی پروژه را می‌سازد تا ساختار config ساده بماند.
+ * این تابع دو نوع دکمه را پشتیبانی می‌کند:
+ *
+ * 1) url
+ *    برای باز کردن لینک
+ *
+ * 2) callback_data
+ *    برای اجرای action داخل خود Bot
+ *
+ * style: primary
+ *    رنگ/استایل آبی استاندارد Telegram
+ * ============================================================
  */
 function buildKeyboard(buttonRows = []) {
   if (!Array.isArray(buttonRows) || buttonRows.length === 0) {
@@ -13,6 +24,7 @@ function buildKeyboard(buttonRows = []) {
   }
 
   const keyboard = new InlineKeyboard();
+
   let buttonCount = 0;
 
   for (let rowIndex = 0; rowIndex < buttonRows.length; rowIndex += 1) {
@@ -23,72 +35,148 @@ function buildKeyboard(buttonRows = []) {
     }
 
     for (const button of row) {
-      if (!button?.text || !button?.url) {
+      if (!button?.text) {
         continue;
       }
 
-      keyboard.url(button.text, button.url);
+      /**
+       * --------------------------------------------------------
+       * دکمه callback
+       * --------------------------------------------------------
+       */
+      if (button.callback_data) {
+        keyboard.text(
+          button.text,
+          button.callback_data
+        );
 
-      // style باید بلافاصله بعد از ساخت همان دکمه اعمال شود.
-      if (button.style) {
-        keyboard.style(button.style);
+        if (button.style) {
+          keyboard.style(button.style);
+        }
+
+        buttonCount += 1;
+        continue;
       }
 
-      buttonCount += 1;
+      /**
+       * --------------------------------------------------------
+       * دکمه URL
+       * --------------------------------------------------------
+       */
+      if (button.url) {
+        keyboard.url(
+          button.text,
+          button.url
+        );
+
+        if (button.style) {
+          keyboard.style(button.style);
+        }
+
+        buttonCount += 1;
+      }
     }
 
+    /**
+     * اگر ردیف دیگری وجود دارد،
+     * وارد ردیف جدید کیبورد می‌شویم.
+     */
     if (rowIndex < buttonRows.length - 1) {
       keyboard.row();
     }
   }
 
-  return buttonCount > 0 ? keyboard : undefined;
+  return buttonCount > 0
+    ? keyboard
+    : undefined;
 }
 
 /**
- * پاسخ را بر اساس نوع آن ارسال می‌کند.
- *
- * نکته مهم: برای متن‌هایی که لینک HTML دارند، parse_mode باید Markdown باشد؛
- * وگرنه <a href="...">@Shoma_shop</a> به‌صورت متن خام نمایش داده می‌شود.
- * اگر response دکمه هم داشته باشد، همان دکمه‌ها زیر پیام قرار می‌گیرند.
+ * ============================================================
+ * ارسال response
+ * ============================================================
  */
 export async function sendResponse(ctx, automation) {
   const response = responses[automation?.response];
 
   if (!response) {
-    console.error(`Response not found: ${automation?.response}`);
+    console.error(
+      `Response not found: ${automation?.response}`
+    );
+
     return;
   }
 
   switch (response.type) {
+    /**
+     * --------------------------------------------------------
+     * پیام متنی
+     * --------------------------------------------------------
+     */
     case "text": {
-      const keyboard = buildKeyboard(response.buttons);
+      const keyboard = buildKeyboard(
+        response.buttons
+      );
+
       const options = {
         parse_mode: "HTML",
-        ...(keyboard ? { reply_markup: keyboard } : {})
+
+        ...(keyboard
+          ? { reply_markup: keyboard }
+          : {})
       };
 
-      await ctx.reply(response.text, options);
+      await ctx.reply(
+        response.text,
+        options
+      );
+
       return;
     }
 
+    /**
+     * --------------------------------------------------------
+     * لوکیشن
+     * --------------------------------------------------------
+     */
     case "location": {
-      const keyboard = buildKeyboard(response.buttons);
-      const options = keyboard ? { reply_markup: keyboard } : undefined;
+      const keyboard = buildKeyboard(
+        response.buttons
+      );
 
+      const options = keyboard
+        ? { reply_markup: keyboard }
+        : undefined;
+
+      /**
+       * در Business Context، grammY خودش context مربوط
+       * به Business Connection را مدیریت می‌کند.
+       */
       await ctx.replyWithLocation(
         response.latitude,
         response.longitude,
         options
       );
 
+      /**
+       * اگر متن هم تعریف شده باشد،
+       * بعد از لوکیشن ارسال می‌شود.
+       */
       if (response.text) {
-        await ctx.reply(response.text);
+        await ctx.reply(
+          response.text,
+          {
+            parse_mode: "HTML"
+          }
+        );
       }
+
       return;
     }
 
     default:
-      console.error(`Unknown response type: ${response.type}`);
+      console.error(
+        `Unknown response type: ${response.type}`
+      );
   }
 }
