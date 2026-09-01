@@ -1,6 +1,16 @@
-import { findResponse } from "../services/keywordMatcher.js";
-import { responses } from "../messages/responses.js";
+import { findAutomation } from "../services/keywordMatcher.js";
+import { sendResponse } from "../services/responseService.js";
 
+/**
+ * Handler عمومی پیام متنی.
+ *
+ * این فایل قبلاً findResponse را import می‌کرد، درحالی‌که چنین exportای
+ * در keywordMatcher وجود نداشت. حالا همان pipeline اصلی automation را
+ * استفاده می‌کند تا این handler هم با معماری فعلی سازگار باشد.
+ *
+ * نکته: در bot.js فعلاً business_message handler ثبت شده است؛ بنابراین
+ * این handler برای استفاده‌های آینده نگه داشته شده و dead import ندارد.
+ */
 export async function handleMessage(ctx) {
   const text = ctx.message?.text;
 
@@ -8,18 +18,11 @@ export async function handleMessage(ctx) {
     return;
   }
 
-  const responseKey = findResponse(text);
+  const automation = findAutomation(text);
 
-  if (!responseKey) {
+  if (!automation) {
     return;
   }
 
-  const response = responses[responseKey];
-
-  if (!response) {
-    console.error(`Response not found: ${responseKey}`);
-    return;
-  }
-
-  await ctx.reply(response);
+  await sendResponse(ctx, automation);
 }
