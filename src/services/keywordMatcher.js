@@ -1,16 +1,16 @@
-```js
 import { automations } from "../config/automation.js";
 
 /**
  * نرمال‌سازی متن فارسی برای کاهش تفاوت‌های تایپی.
- * علاوه بر حروف عربی/فارسی، نیم‌فاصله و punctuation هم یکدست می‌شوند.
  */
 export function normalizeText(text) {
-  return String(text)
+  return String(text ?? "")
     .toLowerCase()
     .replace(/ي/g, "ی")
     .replace(/ى/g, "ی")
     .replace(/ك/g, "ک")
+    .replace(/ۀ/g, "ه")
+    .replace(/ة/g, "ه")
     .replace(/[\u200c\u200d]/g, " ")
     .replace(/[\u0640]/g, "")
     .replace(/[؟?!.,،؛:()[\]{}"'`«»]/g, " ")
@@ -22,11 +22,26 @@ function compact(text) {
   return normalizeText(text).replace(/\s+/g, "");
 }
 
-function levenshteinDistance(a, b) {
-  if (a === b) return 0;
+function tokenize(text) {
+  const normalized = normalizeText(text);
 
-  if (a.length === 0) return b.length;
-  if (b.length === 0) return a.length;
+  return normalized
+    ? normalized.split(" ")
+    : [];
+}
+
+function levenshteinDistance(a, b) {
+  if (a === b) {
+    return 0;
+  }
+
+  if (!a.length) {
+    return b.length;
+  }
+
+  if (!b.length) {
+    return a.length;
+  }
 
   if (a.length < b.length) {
     [a, b] = [b, a];
@@ -34,14 +49,17 @@ function levenshteinDistance(a, b) {
 
   let previous = Array.from(
     { length: b.length + 1 },
-    (_, i) => i
+    (_, index) => index
   );
 
-  for (let i = 1; i <= a.length; i++) {
+  for (let i = 1; i <= a.length; i += 1) {
     const current = [i];
 
-    for (let j = 1; j <= b.length; j++) {
-      const cost = a[i - 1] === b[j - 1] ? 0 : 1;
+    for (let j = 1; j <= b.length; j += 1) {
+      const cost =
+        a[i - 1] === b[j - 1]
+          ? 0
+          : 1;
 
       current[j] = Math.min(
         current[j - 1] + 1,
@@ -57,53 +75,124 @@ function levenshteinDistance(a, b) {
 }
 
 /**
- * میزان غلط تایپی قابل قبول.
- * کلمات خیلی کوتاه fuzzy نمی‌شوند تا false positive کم بماند.
+ * تعداد خطای قابل قبول بر اساس طول keyword فشرده‌شده.
  */
 function getTypoTolerance(length) {
-  if (length < 5) return 0;
-  if (length < 8) return 1;
+  if (length < 5) {
+    return 0;
+  }
+
+  if (length < 8) {
+    return 1;
+  }
+
   return 2;
 }
 
-function fuzzyContainsKeyword(text, keyword) {
-  const normalizedText = compact(text);
-  const normalizedKeyword = compact(keyword);
+/**
+ * تطبیق keyword:
+ *
+ * 1. تطبیق دقیق
+ * 2. تطبیق با حذف فاصله
+ * 3. fuzzy matching محدود روی چند توکن مجاور
+ *
+ * این ساختار باعث می‌شود:
+ *
+ * ساعت کاری
+ * ساعتکاری
+ * ساعکاری
+ *
+ * بتوانند به یک intent برسند،
+ * بدون اینکه fuzzy روی کل جمله آزادانه اجرا شود.
+ */
+function containsKeyword(text, keyword) {
+  const normalizedText = normalizeText(text);
+  const normalizedKeyword = normalizeText(keyword);
 
-  const maxDistance = getTypoTolerance(normalizedKeyword.length);
-
-  if (!normalizedKeyword || maxDistance === 0) {
+  if (!normalizedText || !normalizedKeyword) {
     return false;
   }
 
-  const minLength = Math.max(
+  /**
+   * تطبیق دقیق با مرز عبارت.
+   */
+  if (
+    ` ${normalizedText} `.includes(
+      ` ${normalizedKeyword} `
+    )
+  ) {
+    return true;
+  }
+
+  /**
+   * پوشش تایپ بدون فاصله:
+   *
+   * «ساعت کاری»
+   * =>
+   * «ساعتکاری»
+   */
+  const compactText = compact(normalizedText);
+  const compactKeyword = compact(normalizedKeyword);
+
+  if (compactText.includes(compactKeyword)) {
+    return true;
+  }
+
+  const maxDistance = getTypoTolerance(
+    compactKeyword.length
+  );
+
+  if (maxDistance === 0) {
+    return false;
+  }
+
+  const textTokens = tokenize(normalizedText);
+  const keywordTokens = tokenize(normalizedKeyword);
+
+  if (
+    !textTokens.length ||
+    !keywordTokens.length
+  ) {
+    return false;
+  }
+
+  const targetTokenCount =
+    keywordTokens.length;
+
+  const minTokenCount = Math.max(
     1,
-    normalizedKeyword.length - maxDistance
+    targetTokenCount - 1
   );
 
-  const maxLength = Math.min(
-    normalizedText.length,
-    normalizedKeyword.length + maxDistance
+  const maxTokenCount = Math.min(
+    textTokens.length,
+    targetTokenCount + 1
   );
 
+  /**
+   * فقط پنجره‌های نزدیک به تعداد کلمات keyword بررسی می‌شوند.
+   *
+   * این کار جلوی fuzzy matching آزاد روی کل متن را می‌گیرد.
+   */
   for (
-    let windowLength = minLength;
-    windowLength <= maxLength;
-    windowLength++
+    let count = minTokenCount;
+    count <= maxTokenCount;
+    count += 1
   ) {
     for (
       let start = 0;
-      start <= normalizedText.length - windowLength;
-      start++
+      start <= textTokens.length - count;
+      start += 1
     ) {
-      const candidate = normalizedText.slice(
-        start,
-        start + windowLength
-      );
+      const candidate = textTokens
+        .slice(start, start + count)
+        .join("");
 
       if (
-        levenshteinDistance(candidate, normalizedKeyword) <=
-        maxDistance
+        levenshteinDistance(
+          candidate,
+          compactKeyword
+        ) <= maxDistance
       ) {
         return true;
       }
@@ -113,36 +202,19 @@ function fuzzyContainsKeyword(text, keyword) {
   return false;
 }
 
-/**
- * ابتدا تطبیق دقیق انجام می‌شود.
- * اگر تطبیق دقیق نبود، غلط تایپی محدود بررسی می‌شود.
- */
-function containsKeyword(text, keyword) {
-  const normalizedText = ` ${normalizeText(text)} `;
-  const normalizedKeyword = normalizeText(keyword);
-
-  if (!normalizedKeyword) {
-    return false;
-  }
-
-  if (normalizedText.includes(` ${normalizedKeyword} `)) {
-    return true;
-  }
-
-  return fuzzyContainsKeyword(normalizedText, normalizedKeyword);
-}
-
-/**
- * پیدا کردن automation با اولویت بالاتر.
- */
 export function findAutomation(text) {
-  if (!String(text).trim()) {
+  if (!String(text ?? "").trim()) {
     return null;
   }
 
-  const enabledAutomations = automations
-    .filter((automation) => automation.enabled)
-    .sort((a, b) => b.priority - a.priority);
+  const enabledAutomations =
+    automations
+      .filter(
+        (automation) => automation.enabled
+      )
+      .sort(
+        (a, b) => b.priority - a.priority
+      );
 
   for (const automation of enabledAutomations) {
     if (
@@ -156,4 +228,3 @@ export function findAutomation(text) {
 
   return null;
 }
-```
