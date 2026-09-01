@@ -15,23 +15,18 @@ export async function sendResponse(ctx, automation) {
   }
 
   if (response.type === "location") {
-    const keyboard = new InlineKeyboard();
-
-    for (const button of response.buttons ?? []) {
-      keyboard.url(button.text, button.url);
-    }
+    const keyboard = response.buttons?.length
+      ? InlineKeyboard.from(response.buttons)
+      : undefined;
 
     await ctx.replyWithLocation(
       response.latitude,
       response.longitude,
       {
+        caption: response.caption,
         reply_markup: keyboard
       }
     );
-
-    if (response.text) {
-      await ctx.reply(response.text);
-    }
 
     return;
   }
