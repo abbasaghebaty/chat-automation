@@ -32,6 +32,8 @@ function buildKeyboard(buttonRows = []) {
         keyboard.url(button.text, button.url);
         buttonCount += 1;
 
+        // grammY style() همیشه روی آخرین دکمه اضافه‌شده اعمال می‌شود.
+        // بنابراین باید بلافاصله بعد از url() فراخوانی شود.
         if (button.style) {
           keyboard.style(button.style);
         }
