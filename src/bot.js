@@ -1,14 +1,19 @@
 import { Bot, webhookCallback } from "grammy";
 
-import { handleMessage } from "./handlers/messageHandler.js";
+import { handleBusinessMessage } from "./handlers/businessMessageHandler.js";
+import { handleBusinessConnection } from "./handlers/businessConnectionHandler.js";
 
 function createBot(token) {
   const bot = new Bot(token);
 
-  bot.on("message:text", handleMessage);
+  // وقتی ربات به اکانت Business وصل/قطع یا تنظیماتش تغییر شود
+  bot.on("business_connection", handleBusinessConnection);
 
-  bot.catch((error) => {
-    console.error("Bot error:", error);
+  // پیام‌های چت‌های مدیریت‌شده توسط Business Bot
+  bot.on("business_message", handleBusinessMessage);
+
+  bot.catch((err) => {
+    console.error("Bot error:", err);
   });
 
   return bot;
@@ -16,12 +21,19 @@ function createBot(token) {
 
 export default {
   async fetch(request, env) {
-    // Health check
     if (request.method === "GET") {
-      return new Response("Chat Automation Bot is running.");
+      return new Response("Chat Automation Worker is running.");
+    }
+
+    if (request.method !== "POST") {
+      return new Response("Method Not Allowed", {
+        status: 405
+      });
     }
 
     if (!env.BOT_TOKEN) {
+      console.error("BOT_TOKEN is missing.");
+
       return new Response("BOT_TOKEN is not configured.", {
         status: 500
       });
