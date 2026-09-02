@@ -115,6 +115,103 @@ test(
 );
 
 test(
+  "product keywords match product names and categories",
+  () => {
+    assert.equal(
+      findAutomation(
+        "ریکا چی دارین؟"
+      )?.id,
+      "productSearch"
+    );
+
+    assert.equal(
+      findAutomation(
+        "پریل چی دارید؟"
+      )?.id,
+      "productSearch"
+    );
+
+    assert.equal(
+      findAutomation(
+        "مایع ظرفشویی چی دارین؟"
+      )?.id,
+      "productSearch"
+    );
+
+    assert.equal(
+      findAutomation(
+        "پودر لباسشویی میخوام"
+      )?.id,
+      "productSearch"
+    );
+
+    assert.equal(
+      findAutomation(
+        "تاید دارید؟"
+      )?.id,
+      "productSearch"
+    );
+  }
+);
+
+test(
+  "product keyword wins over hello when greeting and product request are combined",
+  () => {
+    assert.equal(
+      findAutomation(
+        "سلام مایع ظرفشویی چی دارین؟"
+      )?.id,
+      "productSearch"
+    );
+
+    assert.equal(
+      findAutomation(
+        "سلام ریکا چی دارید؟"
+      )?.id,
+      "productSearch"
+    );
+  }
+);
+
+test(
+  "generic product listing requests still use products automation",
+  () => {
+    assert.equal(
+      findAutomation(
+        "محصولات‌تون چیان؟"
+      )?.id,
+      "products"
+    );
+
+    assert.equal(
+      findAutomation(
+        "لیست محصولات"
+      )?.id,
+      "products"
+    );
+  }
+);
+
+test(
+  "price intent keeps priority over product intent",
+  () => {
+    assert.equal(
+      findAutomation(
+        "قیمت ریکا چنده؟"
+      )?.id,
+      "price"
+    );
+
+    assert.equal(
+      findAutomation(
+        "قیمت مایع ظرفشویی"
+      )?.id,
+      "price"
+    );
+  }
+);
+
+test(
   "missing spaces can still match",
   () => {
     assert.equal(
