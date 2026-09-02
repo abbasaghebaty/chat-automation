@@ -1,42 +1,45 @@
 export const responses = {
-  address: {
-    type: "location",
+address: {
+  type: "location",
 
-    latitude:
-      36.325273576311425,
+  latitude:
+    36.325273576311425,
 
-    longitude:
-      59.60890905931591,
+  longitude:
+    59.60890905931591,
 
-    text:
-      "مشهد، بین هنرور ۲۰ و ۲۲ قرار دارد."
-  },
+  text:
+    "مشهد، بین هنرور ۲۰ و ۲۲\n\n" +
+    "قبل از اینکه بخواین حضوری بیاین، ساعت کاری فروشگاه رو چک کنین.\n\n" +
+    "برای دریافت ساعت کاری، این پیام رو بفرستین:\n" +
+    "<code>ساعت کاری شما شاپ</code>",
 
-  hours: {
-    type: "text",
+  buttons: [
+    [
+      {
+        text:
+          "مسیریابی",
 
-    text:
-      "🕘 ساعت فعالیت فروشگاه:\n\n" +
-      "شنبه تا پنجشنبه\n" +
-      "۹:۰۰ تا ۱۴:۰۰\n" +
-      "۱۷:۰۰ تا ۲۲:۰۰",
+        url:
+          "https://www.google.com/maps/dir/?api=1&destination=36.325273576311425,59.60890905931591",
 
-    buttons: [
-      [
-        {
-          text:
-            "الان فروشگاه بازه؟",
+        style:
+          "primary"
+      },
 
-          callback_data:
-            "check_store_hours",
+      {
+        text:
+          "نمایش در نقشه",
 
-          style:
-            "primary"
-        }
-      ]
+        url:
+          "https://www.google.com/maps/search/?api=1&query=36.325273576311425,59.60890905931591",
+
+        style:
+          "primary"
+      }
     ]
-  },
-
+  ]
+},
   price: {
     type: "text",
 
