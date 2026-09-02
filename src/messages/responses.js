@@ -145,50 +145,6 @@ export const responses = {
     ]
   },
 
-  price: {
-    type: "text",
-
-    text:
-      "اسم محصول رو بفرستید تا قیمتش رو اعلام کنیم."
-  },
-
-  products: {
-    type: "text",
-
-    text:
-      "برای مشاهده محصولات و اجناس، به کانال‌های ما در ایتا و روبیکا سر بزنید:\n\n" +
-      "ایتا:\n" +
-      "<a href=\"https://eitaa.com/shoma_shop\">@Shoma_shop</a>\n\n" +
-      "روبیکا:\n" +
-      "<a href=\"https://rubika.ir/shoma_shop\">@Shoma_shop</a>",
-
-    buttons: [
-      [
-        {
-          text:
-            "ایتا",
-
-          url:
-            "https://eitaa.com/shoma_shop",
-
-          style:
-            "primary"
-        },
-
-        {
-          text:
-            "روبیکا",
-
-          url:
-            "https://rubika.ir/shoma_shop",
-
-          style:
-            "primary"
-        }
-      ]
-    ]
-  },
-
   website: {
     type: "text",
 
@@ -450,37 +406,3 @@ export const responses = {
       "جانم در خدمتم"
   }
 };
- 
-productSearch: {
-    type: "text",
-
-    text:
-      "همه محصولات و قیمت‌های شما شاپ به‌صورت کامل در کانال‌ها قرار گرفته‌اند.\n\n" +
-      "برای مشاهده محصولات، موجودی و قیمت‌ها می‌توانید از طریق کانال‌های ایتا و روبیکا اقدام کنید.",
-
-    buttons: [
-      [
-        {
-          text:
-            "ایتا",
-
-          url:
-            "https://eitaa.com/shoma_shop",
-
-          style:
-            "primary"
-        },
-
-        {
-          text:
-            "روبیکا",
-
-          url:
-            "https://rubika.ir/shoma_shop",
-
-          style:
-            "primary"
-        }
-      ]
-    ]
-  },
