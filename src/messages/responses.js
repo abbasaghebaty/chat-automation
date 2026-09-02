@@ -1,45 +1,72 @@
 export const responses = {
-address: {
-  type: "location",
+  address: {
+    type: "location",
 
-  latitude:
-    36.325273576311425,
+    latitude:
+      36.325273576311425,
 
-  longitude:
-    59.60890905931591,
+    longitude:
+      59.60890905931591,
 
-  text:
-    "مشهد، بین هنرور ۲۰ و ۲۲\n\n" +
-    "قبل از اینکه بخواین حضوری بیاین، ساعت کاری فروشگاه رو چک کنین.\n\n" +
-    "برای دریافت ساعت کاری، این پیام رو بفرستین:\n" +
-    "<code>ساعت کاری شما شاپ</code>",
+    text:
+      "مشهد، بین هنرور ۲۰ و ۲۲\n\n" +
+      "قبل از اینکه بخواین حضوری بیاین، ساعت کاری فروشگاه رو چک کنین.\n\n" +
+      "برای دریافت ساعت کاری، این پیام رو بفرستین:\n" +
+      "<code>ساعت کاری شما شاپ</code>",
 
-  buttons: [
-    [
-      {
-        text:
-          "مسیریابی",
+    buttons: [
+      [
+        {
+          text:
+            "مسیریابی",
 
-        url:
-          "https://www.google.com/maps/dir/?api=1&destination=36.325273576311425,59.60890905931591",
+          url:
+            "https://www.google.com/maps/dir/?api=1&destination=36.325273576311425,59.60890905931591",
 
-        style:
-          "primary"
-      },
+          style:
+            "primary"
+        },
 
-      {
-        text:
-          "نمایش در نقشه",
+        {
+          text:
+            "نمایش در نقشه",
 
-        url:
-          "https://www.google.com/maps/search/?api=1&query=36.325273576311425,59.60890905931591",
+          url:
+            "https://www.google.com/maps/search/?api=1&query=36.325273576311425,59.60890905931591",
 
-        style:
-          "primary"
-      }
+          style:
+            "primary"
+        }
+      ]
     ]
-  ]
-},
+  },
+
+  hours: {
+    type: "text",
+
+    text:
+      "ساعت کاری شما شاپ:\n\n" +
+      "شنبه تا پنجشنبه\n" +
+      "۹:۰۰ تا ۱۴:۰۰\n" +
+      "۱۷:۰۰ تا ۲۲:۰۰\n\n" +
+      "جمعه: تعطیل",
+
+    buttons: [
+      [
+        {
+          text:
+            "الان فروشگاه بازه؟",
+
+          callback_data:
+            "check_store_hours",
+
+          style:
+            "primary"
+        }
+      ]
+    ]
+  },
+
   price: {
     type: "text",
 
@@ -60,16 +87,23 @@ address: {
     buttons: [
       [
         {
-          text: "ایتا",
+          text:
+            "ایتا",
+
           url:
             "https://eitaa.com/shoma_shop",
+
           style:
             "primary"
         },
+
         {
-          text: "روبیکا",
+          text:
+            "روبیکا",
+
           url:
             "https://rubika.ir/shoma_shop",
+
           style:
             "primary"
         }
@@ -87,9 +121,12 @@ address: {
     buttons: [
       [
         {
-          text: "سایت",
+          text:
+            "سایت",
+
           url:
             "https://shoma-shop.ir/",
+
           style:
             "primary"
         }
@@ -129,6 +166,7 @@ address: {
           style:
             "primary"
         },
+
         {
           text:
             "ایتا",
@@ -152,6 +190,7 @@ address: {
           style:
             "primary"
         },
+
         {
           text:
             "اینستاگرام",
@@ -286,6 +325,7 @@ address: {
           style:
             "primary"
         },
+
         {
           text:
             "ایتا",
@@ -309,6 +349,7 @@ address: {
           style:
             "primary"
         },
+
         {
           text:
             "اینستاگرام",
@@ -327,6 +368,7 @@ address: {
     type: "text",
 
     text:
-      "سلام.\nجانم در خدمتم"
+      "سلام.\n" +
+      "جانم در خدمتم"
   }
 };
