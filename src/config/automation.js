@@ -6,8 +6,8 @@
  *
  * priority برای حل تداخل بین عبارت‌ها استفاده می‌شود.
  */
-import { productKeywords } from "./productKeywords.js";
 
+import { productKeywords } from "./productKeywords.js";
 
 export const automations = [
   {
@@ -104,6 +104,16 @@ export const automations = [
 
     response: "price",
     priority: 95
+  },
+
+  {
+    id: "productSearch",
+    enabled: true,
+
+    keywords: productKeywords,
+
+    response: "productSearch",
+    priority: 93
   },
 
   {
