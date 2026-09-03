@@ -211,38 +211,255 @@ export const responses = {
 
   /**
    * پاسخ مربوط به نحوه خرید و ثبت سفارش.
+   *
+   * فقط ایتا و روبیکا.
+   * تلگرام عمداً حذف شده است.
    */
- order: {
-  type: "text",
+  order: {
+    type: "text",
 
-  text:
-    "همه محصولات شما شاپ در کانال‌ها قرار گرفته‌اند.\n\n" +
-    "محصول موردنظرتون رو از کانال انتخاب کنید و بعد برای خرید و هماهنگی نهایی از طریق پیوی با ما در ارتباط باشید.\n\n" +
-    "پرداخت سفارش قبل از ارسال انجام می‌شود.",
+    text:
+      "همه محصولات شما شاپ در کانال‌ها قرار گرفته‌اند.\n\n" +
+      "محصول موردنظرتون رو از کانال انتخاب کنید و بعد برای خرید و هماهنگی نهایی از طریق پیوی با ما در ارتباط باشید.\n\n" +
+      "پرداخت سفارش قبل از ارسال انجام می‌شود.",
 
-  buttons: [
-    [
-      {
-        text:
-          "ایتا",
+    buttons: [
+      [
+        {
+          text:
+            "ایتا",
 
-        url:
-          "https://eitaa.com/shoma_shop",
+          url:
+            "https://eitaa.com/shoma_shop",
 
-        style:
-          "primary"
-      },
+          style:
+            "primary"
+        },
 
-      {
-        text:
-          "روبیکا",
+        {
+          text:
+            "روبیکا",
 
-        url:
-          "https://rubika.ir/shoma_shop",
+          url:
+            "https://rubika.ir/shoma_shop",
 
-        style:
-          "primary"
-      }
+          style:
+            "primary"
+        }
+      ]
     ]
-  ]
-},
+  },
+
+  /**
+   * پاسخ مربوط به پرداخت.
+   *
+   * پرداخت قبل از ارسال انجام می‌شود.
+   */
+  payment: {
+    type: "text",
+
+    text:
+      "پرداخت سفارش‌ها قبل از ارسال انجام می‌شود.\n\n" +
+      "ابتدا محصول موردنظرتون رو از کانال‌ها انتخاب کنید، سپس برای خرید و هماهنگی پرداخت از طریق پیوی با ما در ارتباط باشید.\n\n" +
+      "اطلاعات پرداخت و نحوه واریز در زمان ثبت سفارش بهتون اعلام می‌شه.",
+
+    buttons: [
+      [
+        {
+          text:
+            "ایتا",
+
+          url:
+            "https://eitaa.com/shoma_shop",
+
+          style:
+            "primary"
+        },
+
+        {
+          text:
+            "روبیکا",
+
+          url:
+            "https://rubika.ir/shoma_shop",
+
+          style:
+            "primary"
+        }
+      ]
+    ]
+  },
+
+  /**
+   * پاسخ مربوط به ارسال.
+   *
+   * پرداخت همیشه قبل از ارسال انجام می‌شود.
+   */
+  shipping: {
+    type: "text",
+
+    text:
+      "شرایط ارسال شما شاپ:\n\n" +
+      "ارسال سفارش بعد از پرداخت انجام می‌شود.\n\n" +
+      "• ارسال رایگان در محدوده فروشگاه\n" +
+      "• ارسال درون‌شهری با پیک\n" +
+      "• ارسال سراسری با پست پیشتاز"
+  },
+
+  telegram: {
+    type: "text",
+
+    text:
+      "کانال تلگرام شما شاپ:\n" +
+      "<a href=\"https://t.me/shoma_shop_ir\">@shoma_shop_ir</a>",
+
+    buttons: [
+      [
+        {
+          text:
+            "تلگرام",
+
+          url:
+            "https://t.me/shoma_shop_ir",
+
+          style:
+            "primary"
+        }
+      ]
+    ]
+  },
+
+  eitaa: {
+    type: "text",
+
+    text:
+      "کانال ایتا شما شاپ:\n" +
+      "<a href=\"https://eitaa.com/shoma_shop\">@Shoma_shop</a>",
+
+    buttons: [
+      [
+        {
+          text:
+            "ایتا",
+
+          url:
+            "https://eitaa.com/shoma_shop",
+
+          style:
+            "primary"
+        }
+      ]
+    ]
+  },
+
+  rubika: {
+    type: "text",
+
+    text:
+      "کانال روبیکا شما شاپ:\n" +
+      "<a href=\"https://rubika.ir/shoma_shop\">@Shoma_shop</a>",
+
+    buttons: [
+      [
+        {
+          text:
+            "روبیکا",
+
+          url:
+            "https://rubika.ir/shoma_shop",
+
+          style:
+            "primary"
+        }
+      ]
+    ]
+  },
+
+  instagram: {
+    type: "text",
+
+    text:
+      "اینستاگرام شما شاپ:\n" +
+      "<a href=\"https://instagram.com/shoma_shop.ir\">@shoma_shop.ir</a>",
+
+    buttons: [
+      [
+        {
+          text:
+            "اینستاگرام",
+
+          url:
+            "https://instagram.com/shoma_shop.ir",
+
+          style:
+            "primary"
+        }
+      ]
+    ]
+  },
+
+  social: {
+    type: "text",
+
+    text:
+      "راه‌های ارتباطی شما شاپ:",
+
+    buttons: [
+      [
+        {
+          text:
+            "تلگرام",
+
+          url:
+            "https://t.me/shoma_shop_ir",
+
+          style:
+            "primary"
+        },
+
+        {
+          text:
+            "ایتا",
+
+          url:
+            "https://eitaa.com/shoma_shop",
+
+          style:
+            "primary"
+        }
+      ],
+
+      [
+        {
+          text:
+            "روبیکا",
+
+          url:
+            "https://rubika.ir/shoma_shop",
+
+          style:
+            "primary"
+        },
+
+        {
+          text:
+            "اینستاگرام",
+
+          url:
+            "https://instagram.com/shoma_shop.ir",
+
+          style:
+            "primary"
+        }
+      ]
+    ]
+  },
+
+  hello: {
+    type: "text",
+
+    text:
+      "سلام.\n" +
+      "جانم در خدمتم"
+  }
+};
