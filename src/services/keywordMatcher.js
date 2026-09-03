@@ -1,7 +1,7 @@
 import { automations } from "../config/automation.js";
 
 /**
- * نرمال‌سازی متن فارسی برای کاهش تفاوت‌های تایپی.
+ * نرمال‌سازی متن فارسی.
  */
 export function normalizeText(text) {
   return String(text ?? "")
@@ -18,19 +18,45 @@ export function normalizeText(text) {
     .trim();
 }
 
+/**
+ * حذف فاصله‌ها برای تشخیص کلمات چسبیده.
+ */
 function compact(text) {
-  return normalizeText(text).replace(/\s+/g, "");
+  return normalizeText(text)
+    .replace(/\s+/g, "");
 }
 
-function tokenize(text) {
-  const normalized = normalizeText(text);
+/**
+ * فاصله مجاز بر اساس طول کلمه.
+ *
+ * حداکثر:
+ * ۲ خطای کاراکتری
+ *
+ * برای کلمات خیلی کوتاه،
+ * تحمل کمتر می‌شود تا false positive زیاد نشود.
+ */
+function getTypoTolerance(length) {
+  if (length <= 2) {
+    return 0;
+  }
 
-  return normalized
-    ? normalized.split(" ")
-    : [];
+  if (length === 3) {
+    return 1;
+  }
+
+  return Math.min(
+    2,
+    Math.floor(length / 2)
+  );
 }
 
-function levenshteinDistance(a, b) {
+/**
+ * محاسبه فاصله Levenshtein.
+ */
+function levenshteinDistance(
+  a,
+  b
+) {
   if (a === b) {
     return 0;
   }
@@ -48,24 +74,39 @@ function levenshteinDistance(a, b) {
   }
 
   let previous = Array.from(
-    { length: b.length + 1 },
-    (_, index) => index
+    {
+      length:
+        b.length + 1
+    },
+    (_, index) =>
+      index
   );
 
-  for (let i = 1; i <= a.length; i += 1) {
+  for (
+    let i = 1;
+    i <= a.length;
+    i += 1
+  ) {
     const current = [i];
 
-    for (let j = 1; j <= b.length; j += 1) {
+    for (
+      let j = 1;
+      j <= b.length;
+      j += 1
+    ) {
       const cost =
-        a[i - 1] === b[j - 1]
+        a[i - 1] ===
+        b[j - 1]
           ? 0
           : 1;
 
-      current[j] = Math.min(
-        current[j - 1] + 1,
-        previous[j] + 1,
-        previous[j - 1] + cost
-      );
+      current[j] =
+        Math.min(
+          current[j - 1] + 1,
+          previous[j] + 1,
+          previous[j - 1] +
+            cost
+        );
     }
 
     previous = current;
@@ -74,125 +115,95 @@ function levenshteinDistance(a, b) {
   return previous[b.length];
 }
 
-function getTypoTolerance(length) {
-  if (length < 5) {
-    return 0;
-  }
-
-  if (length < 8) {
-    return 1;
-  }
-
-  return 2;
-}
-
 /**
- * یک keyword را روی متن بررسی می‌کند.
+ * بررسی fuzzy substring.
  *
- * ترتیب:
- * 1. تطبیق دقیق
- * 2. تطبیق بدون فاصله
- * 3. fuzzy محدود
+ * تفاوت مهم با نسخه قبلی:
+ *
+ * دیگر لازم نیست keyword یک کلمه
+ * یا یک token مستقل باشد.
+ *
+ * مثال:
+ *
+ * keyword:
+ * دارین
+ *
+ * text:
+ * شامپوهمذارین
+ *
+ * بخش:
+ * ذارین
+ *
+ * با فاصله ۱ پذیرفته می‌شود.
  */
-function containsKeyword(text, keyword) {
-  const normalizedText = normalizeText(text);
-  const normalizedKeyword = normalizeText(keyword);
+function fuzzyContains(
+  text,
+  keyword
+) {
+  const compactText =
+    compact(text);
+
+  const compactKeyword =
+    compact(keyword);
 
   if (
-    !normalizedText ||
-    !normalizedKeyword
+    !compactText ||
+    !compactKeyword
   ) {
     return false;
   }
 
-  /**
-   * تطبیق دقیق با مرز عبارت.
-   */
-  if (
-    ` ${normalizedText} `.includes(
-      ` ${normalizedKeyword} `
-    )
-  ) {
-    return true;
-  }
-
-  /**
-   * پوشش عبارت‌هایی مثل:
-   *
-   * ساعت کاری
-   * ساعتکاری
-   */
-  const compactText = compact(
-    normalizedText
-  );
-
-  const compactKeyword = compact(
-    normalizedKeyword
-  );
-
-  if (
-    compactText.includes(
-      compactKeyword
-    )
-  ) {
-    return true;
-  }
+  const keywordLength =
+    compactKeyword.length;
 
   const maxDistance =
     getTypoTolerance(
-      compactKeyword.length
+      keywordLength
     );
 
   if (maxDistance === 0) {
     return false;
   }
 
-  const textTokens =
-    tokenize(normalizedText);
-
-  const keywordTokens =
-    tokenize(normalizedKeyword);
-
-  if (
-    !textTokens.length ||
-    !keywordTokens.length
-  ) {
-    return false;
-  }
-
-  const targetTokenCount =
-    keywordTokens.length;
-
-  const minTokenCount =
+  const minLength =
     Math.max(
       1,
-      targetTokenCount - 1
+      keywordLength -
+        maxDistance
     );
 
-  const maxTokenCount =
-    Math.min(
-      textTokens.length,
-      targetTokenCount + 1
-    );
+  const maxLength =
+    keywordLength +
+    maxDistance;
 
+  /**
+   * همه substringهای نزدیک به
+   * طول keyword بررسی می‌شوند.
+   */
   for (
-    let count = minTokenCount;
-    count <= maxTokenCount;
-    count += 1
+    let length = minLength;
+    length <= maxLength;
+    length += 1
   ) {
+    if (
+      length >
+      compactText.length
+    ) {
+      continue;
+    }
+
     for (
       let start = 0;
       start <=
-        textTokens.length - count;
+        compactText.length -
+          length;
       start += 1
     ) {
       const candidate =
-        textTokens
-          .slice(
-            start,
-            start + count
-          )
-          .join("");
+        compactText.slice(
+          start,
+          start + length
+        );
 
       if (
         levenshteinDistance(
@@ -209,14 +220,91 @@ function containsKeyword(text, keyword) {
 }
 
 /**
- * هر مجموعه keyword را بررسی می‌کند.
+ * بررسی وجود keyword در متن.
+ *
+ * ترتیب:
+ *
+ * 1. تطبیق مستقیم
+ * 2. تطبیق بدون فاصله
+ * 3. fuzzy matching با حداکثر ۲ خطا
+ */
+function containsKeyword(
+  text,
+  keyword
+) {
+  const normalizedText =
+    normalizeText(text);
+
+  const normalizedKeyword =
+    normalizeText(keyword);
+
+  if (
+    !normalizedText ||
+    !normalizedKeyword
+  ) {
+    return false;
+  }
+
+  /**
+   * تطبیق مستقیم.
+   *
+   * عمدی است که boundary لازم نیست.
+   *
+   * بنابراین:
+   *
+   * دارین
+   * داخل
+   * شامپوهمدارین
+   *
+   * نیز پیدا می‌شود.
+   */
+  if (
+    normalizedText.includes(
+      normalizedKeyword
+    )
+  ) {
+    return true;
+  }
+
+  /**
+   * تطبیق بدون فاصله.
+   *
+   * مثال:
+   *
+   * ساعت کاری
+   * ساعتکاری
+   */
+  const compactText =
+    compact(normalizedText);
+
+  const compactKeyword =
+    compact(normalizedKeyword);
+
+  if (
+    compactText.includes(
+      compactKeyword
+    )
+  ) {
+    return true;
+  }
+
+  return fuzzyContains(
+    normalizedText,
+    normalizedKeyword
+  );
+}
+
+/**
+ * بررسی یک لیست keyword.
  */
 function matchesKeywordList(
   text,
   keywords
 ) {
   if (
-    !Array.isArray(keywords)
+    !Array.isArray(
+      keywords
+    )
   ) {
     return false;
   }
@@ -231,25 +319,13 @@ function matchesKeywordList(
 }
 
 /**
- * ساختارهای گروهی:
+ * بررسی شرط‌های ترکیبی.
  *
- * any: یکی از شروط باید برقرار باشد
+ * any:
+ * حداقل یکی
  *
- * all: تمام شروط باید برقرار باشند
- *
- * مثال:
- *
- * {
- *   all: [
- *     ["دارین", "دارید"],
- *     ["چی", "محصول"]
- *   ]
- * }
- *
- * یعنی:
- * یک کلمه از گروه اول
- * و
- * یک کلمه از گروه دوم
+ * all:
+ * همه
  */
 function matchesCondition(
   text,
@@ -257,7 +333,8 @@ function matchesCondition(
 ) {
   if (
     !condition ||
-    typeof condition !== "object"
+    typeof condition !==
+      "object"
   ) {
     return false;
   }
@@ -293,26 +370,28 @@ function matchesCondition(
   return false;
 }
 
+/**
+ * یک group می‌تواند:
+ *
+ * - آرایه keyword باشد
+ * - شرط ترکیبی باشد
+ */
 function matchesGroup(
   text,
   group
 ) {
-  if (
-    !group
-  ) {
+  if (!group) {
     return false;
   }
 
-  /**
-   * اگر یک آرایه باشد،
-   * یعنی این آرایه یک گروه keyword است.
-   */
   if (
-    Array.isArray(group)
+    Array.isArray(
+      group
+    )
   ) {
     /**
-     * اگر آرایه شامل string باشد،
-     * یعنی OR بین کلمات.
+     * آرایه‌ای از string:
+     * OR
      */
     if (
       group.every(
@@ -328,14 +407,12 @@ function matchesGroup(
     }
 
     /**
-     * اگر داخل آرایه
-     * object وجود داشته باشد،
-     * یعنی شرط ترکیبی.
+     * آرایه شرط‌های ترکیبی.
      */
     return group.some(
       (item) =>
         typeof item ===
-        "object" &&
+          "object" &&
         matchesCondition(
           text,
           item
@@ -357,7 +434,7 @@ function matchesGroup(
 }
 
 /**
- * بررسی groups مربوط به automation.
+ * بررسی groups یک automation.
  */
 function matchesGroups(
   text,
@@ -371,10 +448,6 @@ function matchesGroups(
     return false;
   }
 
-  /**
-   * any:
-   * حداقل یکی از شرط‌ها باید درست باشد.
-   */
   if (
     Array.isArray(
       groups.any
@@ -389,10 +462,6 @@ function matchesGroups(
     );
   }
 
-  /**
-   * all:
-   * تمام شرط‌ها باید درست باشند.
-   */
   if (
     Array.isArray(
       groups.all
@@ -410,6 +479,11 @@ function matchesGroups(
   return false;
 }
 
+/**
+ * پیدا کردن automation مناسب.
+ *
+ * priority بالاتر اول بررسی می‌شود.
+ */
 export function findAutomation(
   text
 ) {
@@ -436,8 +510,7 @@ export function findAutomation(
     of enabledAutomations
   ) {
     /**
-     * automationهای قدیمی
-     * که keywords دارند.
+     * automationهای ساده.
      */
     if (
       Array.isArray(
@@ -452,8 +525,7 @@ export function findAutomation(
     }
 
     /**
-     * automationهای جدید
-     * که groups دارند.
+     * automationهای گروهی.
      */
     if (
       automation.groups &&
