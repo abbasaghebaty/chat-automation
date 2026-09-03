@@ -3,8 +3,7 @@
  *
  * هر automation یک intent مشخص دارد.
  *
- * برای intentهای ساده از keywords استفاده می‌شود.
- * برای intentهای ترکیبی از groups استفاده می‌شود.
+ * priority برای حل تداخل بین intentها استفاده می‌شود.
  */
 
 import { vocabulary } from "./vocabulary.js";
@@ -84,12 +83,6 @@ export const automations = [
     id: "price",
     enabled: true,
 
-    /**
-     * price دیگر به اسم محصول وابسته نیست.
-     *
-     * هرکدام از کلمات price.pricing یا price.amount
-     * می‌تواند قیمت را تشخیص دهد.
-     */
     groups: {
       any: [
         vocabulary.price.pricing,
@@ -99,49 +92,6 @@ export const automations = [
 
     response: "price",
     priority: 95
-  },
-
-  {
-    id: "productSearch",
-    enabled: true,
-
-    /**
-     * درخواست محصول بر اساس دسته واژه‌ها تشخیص داده می‌شود.
-     *
-     * حالت‌های معتبر:
-     *
-     * 1. existence + request
-     * 2. existence به‌تنهایی
-     * 3. inventory به‌تنهایی
-     * 4. request + desire
-     */
-    groups: {
-      any: [
-        {
-          all: [
-            vocabulary.product.existence,
-            vocabulary.product.request
-          ]
-        },
-
-        {
-          any: [
-            vocabulary.product.existence,
-            vocabulary.product.inventory
-          ]
-        },
-
-        {
-          all: [
-            vocabulary.product.request,
-            vocabulary.product.desire
-          ]
-        }
-      ]
-    },
-
-    response: "productSearch",
-    priority: 93
   },
 
   {
@@ -162,6 +112,9 @@ export const automations = [
       "لیست کالا",
       "کالا",
       "کالاها",
+      "چی دارید",
+      "چه دارید",
+      "چه محصولاتی",
       "چی میفروشید",
       "چی می فروشید",
       "چی می‌فروشید",
@@ -172,6 +125,52 @@ export const automations = [
 
     response: "products",
     priority: 90
+  },
+
+  /**
+   * اینجا دیگر هیچ اسم محصول یا برند وجود ندارد.
+   *
+   * محصول با واژگان رفتاری شناسایی می‌شود.
+   */
+  {
+    id: "productSearch",
+    enabled: true,
+
+    groups: {
+      any: [
+        /**
+         * وجود داشتن کالا
+         *
+         * مثال:
+         * دارین؟
+         * زارین؟
+         * شامپوهمذارین؟
+         */
+        vocabulary.product.existence,
+
+        /**
+         * درخواست کلی محصول
+         *
+         * مثال:
+         * چی دارید؟
+         * چه محصولاتی؟
+         * هرچی؟
+         */
+        vocabulary.product.request,
+
+        /**
+         * درخواست خرید
+         *
+         * مثال:
+         * میخوام
+         * دنبال می‌گردم
+         */
+        vocabulary.product.desire
+      ]
+    },
+
+    response: "productSearch",
+    priority: 86
   },
 
   {
