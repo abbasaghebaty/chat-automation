@@ -74,9 +74,6 @@ function levenshteinDistance(a, b) {
   return previous[b.length];
 }
 
-/**
- * تعداد خطای قابل قبول بر اساس طول keyword فشرده‌شده.
- */
 function getTypoTolerance(length) {
   if (length < 5) {
     return 0;
@@ -90,26 +87,21 @@ function getTypoTolerance(length) {
 }
 
 /**
- * تطبیق keyword:
+ * یک keyword را روی متن بررسی می‌کند.
  *
+ * ترتیب:
  * 1. تطبیق دقیق
- * 2. تطبیق با حذف فاصله
- * 3. fuzzy matching محدود روی چند توکن مجاور
- *
- * این ساختار باعث می‌شود:
- *
- * ساعت کاری
- * ساعتکاری
- * ساعکاری
- *
- * بتوانند به یک intent برسند،
- * بدون اینکه fuzzy روی کل جمله آزادانه اجرا شود.
+ * 2. تطبیق بدون فاصله
+ * 3. fuzzy محدود
  */
 function containsKeyword(text, keyword) {
   const normalizedText = normalizeText(text);
   const normalizedKeyword = normalizeText(keyword);
 
-  if (!normalizedText || !normalizedKeyword) {
+  if (
+    !normalizedText ||
+    !normalizedKeyword
+  ) {
     return false;
   }
 
@@ -125,29 +117,41 @@ function containsKeyword(text, keyword) {
   }
 
   /**
-   * پوشش تایپ بدون فاصله:
+   * پوشش عبارت‌هایی مثل:
    *
-   * «ساعت کاری»
-   * =>
-   * «ساعتکاری»
+   * ساعت کاری
+   * ساعتکاری
    */
-  const compactText = compact(normalizedText);
-  const compactKeyword = compact(normalizedKeyword);
+  const compactText = compact(
+    normalizedText
+  );
 
-  if (compactText.includes(compactKeyword)) {
+  const compactKeyword = compact(
+    normalizedKeyword
+  );
+
+  if (
+    compactText.includes(
+      compactKeyword
+    )
+  ) {
     return true;
   }
 
-  const maxDistance = getTypoTolerance(
-    compactKeyword.length
-  );
+  const maxDistance =
+    getTypoTolerance(
+      compactKeyword.length
+    );
 
   if (maxDistance === 0) {
     return false;
   }
 
-  const textTokens = tokenize(normalizedText);
-  const keywordTokens = tokenize(normalizedKeyword);
+  const textTokens =
+    tokenize(normalizedText);
+
+  const keywordTokens =
+    tokenize(normalizedKeyword);
 
   if (
     !textTokens.length ||
@@ -159,21 +163,18 @@ function containsKeyword(text, keyword) {
   const targetTokenCount =
     keywordTokens.length;
 
-  const minTokenCount = Math.max(
-    1,
-    targetTokenCount - 1
-  );
+  const minTokenCount =
+    Math.max(
+      1,
+      targetTokenCount - 1
+    );
 
-  const maxTokenCount = Math.min(
-    textTokens.length,
-    targetTokenCount + 1
-  );
+  const maxTokenCount =
+    Math.min(
+      textTokens.length,
+      targetTokenCount + 1
+    );
 
-  /**
-   * فقط پنجره‌های نزدیک به تعداد کلمات keyword بررسی می‌شوند.
-   *
-   * این کار جلوی fuzzy matching آزاد روی کل متن را می‌گیرد.
-   */
   for (
     let count = minTokenCount;
     count <= maxTokenCount;
@@ -181,12 +182,17 @@ function containsKeyword(text, keyword) {
   ) {
     for (
       let start = 0;
-      start <= textTokens.length - count;
+      start <=
+        textTokens.length - count;
       start += 1
     ) {
-      const candidate = textTokens
-        .slice(start, start + count)
-        .join("");
+      const candidate =
+        textTokens
+          .slice(
+            start,
+            start + count
+          )
+          .join("");
 
       if (
         levenshteinDistance(
@@ -202,24 +208,258 @@ function containsKeyword(text, keyword) {
   return false;
 }
 
-export function findAutomation(text) {
-  if (!String(text ?? "").trim()) {
+/**
+ * هر مجموعه keyword را بررسی می‌کند.
+ */
+function matchesKeywordList(
+  text,
+  keywords
+) {
+  if (
+    !Array.isArray(keywords)
+  ) {
+    return false;
+  }
+
+  return keywords.some(
+    (keyword) =>
+      containsKeyword(
+        text,
+        keyword
+      )
+  );
+}
+
+/**
+ * ساختارهای گروهی:
+ *
+ * any: یکی از شروط باید برقرار باشد
+ *
+ * all: تمام شروط باید برقرار باشند
+ *
+ * مثال:
+ *
+ * {
+ *   all: [
+ *     ["دارین", "دارید"],
+ *     ["چی", "محصول"]
+ *   ]
+ * }
+ *
+ * یعنی:
+ * یک کلمه از گروه اول
+ * و
+ * یک کلمه از گروه دوم
+ */
+function matchesCondition(
+  text,
+  condition
+) {
+  if (
+    !condition ||
+    typeof condition !== "object"
+  ) {
+    return false;
+  }
+
+  if (
+    Array.isArray(
+      condition.all
+    )
+  ) {
+    return condition.all.every(
+      (item) =>
+        matchesGroup(
+          text,
+          item
+        )
+    );
+  }
+
+  if (
+    Array.isArray(
+      condition.any
+    )
+  ) {
+    return condition.any.some(
+      (item) =>
+        matchesGroup(
+          text,
+          item
+        )
+    );
+  }
+
+  return false;
+}
+
+function matchesGroup(
+  text,
+  group
+) {
+  if (
+    !group
+  ) {
+    return false;
+  }
+
+  /**
+   * اگر یک آرایه باشد،
+   * یعنی این آرایه یک گروه keyword است.
+   */
+  if (
+    Array.isArray(group)
+  ) {
+    /**
+     * اگر آرایه شامل string باشد،
+     * یعنی OR بین کلمات.
+     */
+    if (
+      group.every(
+        (item) =>
+          typeof item ===
+          "string"
+      )
+    ) {
+      return matchesKeywordList(
+        text,
+        group
+      );
+    }
+
+    /**
+     * اگر داخل آرایه
+     * object وجود داشته باشد،
+     * یعنی شرط ترکیبی.
+     */
+    return group.some(
+      (item) =>
+        typeof item ===
+        "object" &&
+        matchesCondition(
+          text,
+          item
+        )
+    );
+  }
+
+  if (
+    typeof group ===
+    "object"
+  ) {
+    return matchesCondition(
+      text,
+      group
+    );
+  }
+
+  return false;
+}
+
+/**
+ * بررسی groups مربوط به automation.
+ */
+function matchesGroups(
+  text,
+  groups
+) {
+  if (
+    !groups ||
+    typeof groups !==
+      "object"
+  ) {
+    return false;
+  }
+
+  /**
+   * any:
+   * حداقل یکی از شرط‌ها باید درست باشد.
+   */
+  if (
+    Array.isArray(
+      groups.any
+    )
+  ) {
+    return groups.any.some(
+      (condition) =>
+        matchesGroup(
+          text,
+          condition
+        )
+    );
+  }
+
+  /**
+   * all:
+   * تمام شرط‌ها باید درست باشند.
+   */
+  if (
+    Array.isArray(
+      groups.all
+    )
+  ) {
+    return groups.all.every(
+      (condition) =>
+        matchesGroup(
+          text,
+          condition
+        )
+    );
+  }
+
+  return false;
+}
+
+export function findAutomation(
+  text
+) {
+  if (
+    !String(text ?? "").trim()
+  ) {
     return null;
   }
 
   const enabledAutomations =
     automations
       .filter(
-        (automation) => automation.enabled
+        (automation) =>
+          automation.enabled
       )
       .sort(
-        (a, b) => b.priority - a.priority
+        (a, b) =>
+          b.priority -
+          a.priority
       );
 
-  for (const automation of enabledAutomations) {
+  for (
+    const automation
+    of enabledAutomations
+  ) {
+    /**
+     * automationهای قدیمی
+     * که keywords دارند.
+     */
     if (
-      automation.keywords.some((keyword) =>
-        containsKeyword(text, keyword)
+      Array.isArray(
+        automation.keywords
+      ) &&
+      matchesKeywordList(
+        text,
+        automation.keywords
+      )
+    ) {
+      return automation;
+    }
+
+    /**
+     * automationهای جدید
+     * که groups دارند.
+     */
+    if (
+      automation.groups &&
+      matchesGroups(
+        text,
+        automation.groups
       )
     ) {
       return automation;
