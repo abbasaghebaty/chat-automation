@@ -1,13 +1,13 @@
 /**
  * قوانین پاسخ‌گویی خودکار ربات.
  *
- * هر rule یک intent مشخص دارد و به یک response در
- * messages/responses.js وصل است.
+ * هر automation یک intent مشخص دارد.
  *
- * priority برای حل تداخل بین عبارت‌ها استفاده می‌شود.
+ * برای intentهای ساده از keywords استفاده می‌شود.
+ * برای intentهای ترکیبی از groups استفاده می‌شود.
  */
 
-import { productKeywords } from "./productKeywords.js";
+import { vocabulary } from "./vocabulary.js";
 
 export const automations = [
   {
@@ -84,23 +84,18 @@ export const automations = [
     id: "price",
     enabled: true,
 
-    keywords: [
-      "قیمت",
-      "قیمته",
-      "قیمتش",
-      "قیمت ها",
-      "قیمتها",
-      "قیمت‌ها",
-      "قیمت چند",
-      "چند قیمت",
-      "چند تومنه",
-      "چند تومن",
-      "چقدر میشه",
-      "چقدره",
-      "هزینه",
-      "هزینه اش",
-      "هزینه‌اش"
-    ],
+    /**
+     * price دیگر به اسم محصول وابسته نیست.
+     *
+     * هرکدام از کلمات price.pricing یا price.amount
+     * می‌تواند قیمت را تشخیص دهد.
+     */
+    groups: {
+      any: [
+        vocabulary.price.pricing,
+        vocabulary.price.amount
+      ]
+    },
 
     response: "price",
     priority: 95
@@ -110,7 +105,40 @@ export const automations = [
     id: "productSearch",
     enabled: true,
 
-    keywords: productKeywords,
+    /**
+     * درخواست محصول بر اساس دسته واژه‌ها تشخیص داده می‌شود.
+     *
+     * حالت‌های معتبر:
+     *
+     * 1. existence + request
+     * 2. existence به‌تنهایی
+     * 3. inventory به‌تنهایی
+     * 4. request + desire
+     */
+    groups: {
+      any: [
+        {
+          all: [
+            vocabulary.product.existence,
+            vocabulary.product.request
+          ]
+        },
+
+        {
+          any: [
+            vocabulary.product.existence,
+            vocabulary.product.inventory
+          ]
+        },
+
+        {
+          all: [
+            vocabulary.product.request,
+            vocabulary.product.desire
+          ]
+        }
+      ]
+    },
 
     response: "productSearch",
     priority: 93
@@ -134,16 +162,12 @@ export const automations = [
       "لیست کالا",
       "کالا",
       "کالاها",
-      "چی دارید",
-      "چه دارید",
-      "چه محصولاتی",
       "چی میفروشید",
       "چی می فروشید",
       "چی می‌فروشید",
       "چه میفروشید",
       "چه می فروشید",
-      "چه می‌فروشید",
-      "موجودی"
+      "چه می‌فروشید"
     ],
 
     response: "products",
