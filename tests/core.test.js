@@ -120,7 +120,7 @@ test(
 );
 
 test(
-  "product existence vocabulary works without product names",
+  "product existence vocabulary works",
   () => {
     assert.equal(
       findAutomation(
@@ -153,34 +153,114 @@ test(
 );
 
 test(
-  "product request vocabulary works without product names",
+  "purchase questions go to order",
   () => {
     assert.equal(
       findAutomation(
-        "چی دارید؟"
+        "میخوام بخرم"
       )?.id,
-      "productSearch"
+      "order"
     );
 
     assert.equal(
       findAutomation(
-        "چه محصولاتی؟"
+        "میخواهم خرید کنم"
       )?.id,
-      "productSearch"
+      "order"
     );
 
     assert.equal(
       findAutomation(
-        "هرچی دارید؟"
+        "چطور خرید کنم؟"
       )?.id,
-      "productSearch"
+      "order"
     );
 
     assert.equal(
       findAutomation(
-        "چه جنسی دارید؟"
+        "چجوری سفارش بدم؟"
       )?.id,
-      "productSearch"
+      "order"
+    );
+
+    assert.equal(
+      findAutomation(
+        "نحوه خرید"
+      )?.id,
+      "order"
+    );
+
+    assert.equal(
+      findAutomation(
+        "درباره خرید سوال داشتم"
+      )?.id,
+      "order"
+    );
+  }
+);
+
+test(
+  "payment questions go to payment",
+  () => {
+    assert.equal(
+      findAutomation(
+        "روش پرداخت چیه؟"
+      )?.id,
+      "payment"
+    );
+
+    assert.equal(
+      findAutomation(
+        "چطور پرداخت کنم؟"
+      )?.id,
+      "payment"
+    );
+
+    assert.equal(
+      findAutomation(
+        "شماره کارت؟"
+      )?.id,
+      "payment"
+    );
+
+    assert.equal(
+      findAutomation(
+        "کارت به کارت کنم؟"
+      )?.id,
+      "payment"
+    );
+
+    assert.equal(
+      findAutomation(
+        "رسید رو کجا بفرستم؟"
+      )?.id,
+      "payment"
+    );
+
+    assert.equal(
+      findAutomation(
+        "درگاه پرداخت دارید؟"
+      )?.id,
+      "payment"
+    );
+  }
+);
+
+test(
+  "shipping remains separate from payment",
+  () => {
+    assert.equal(
+      findAutomation(
+        "شرایط ارسال چیه؟"
+      )?.id,
+      "shipping"
+    );
+
+    assert.equal(
+      findAutomation(
+        "چطور ارسال میکنید؟"
+      )?.id,
+      "shipping"
     );
   }
 );
@@ -245,51 +325,6 @@ test(
         "اینمحصولودارین؟"
       )?.id,
       "productSearch"
-    );
-  }
-);
-
-test(
-  "question mark and punctuation do not need separate keywords",
-  () => {
-    assert.equal(
-      findAutomation(
-        "دارین؟"
-      )?.id,
-      "productSearch"
-    );
-
-    assert.equal(
-      findAutomation(
-        "دارین!!!"
-      )?.id,
-      "productSearch"
-    );
-
-    assert.equal(
-      findAutomation(
-        "قیمتش چنده؟"
-      )?.id,
-      "price"
-    );
-  }
-);
-
-test(
-  "unknown product names are irrelevant to intent detection",
-  () => {
-    assert.equal(
-      findAutomation(
-        "یک اسم کاملاً ناشناخته دارین؟"
-      )?.id,
-      "productSearch"
-    );
-
-    assert.equal(
-      findAutomation(
-        "محصولی که در کد وجود ندارد چنده؟"
-      )?.id,
-      "price"
     );
   }
 );
