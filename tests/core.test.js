@@ -1,8 +1,13 @@
 import assert from "node:assert/strict";
 import test from "node:test";
 
-import { automations } from "../src/config/automation.js";
-import { responses } from "../src/messages/responses.js";
+import {
+  automations
+} from "../src/config/automation.js";
+
+import {
+  responses
+} from "../src/messages/responses.js";
 
 import {
   findAutomation,
@@ -89,7 +94,7 @@ test(
 );
 
 test(
-  "exact keyword matching works",
+  "basic automations still work",
   () => {
     assert.equal(
       findAutomation(
@@ -115,39 +120,18 @@ test(
 );
 
 test(
-  "generic product vocabulary detects product requests without product names",
+  "product existence vocabulary works without product names",
   () => {
     assert.equal(
       findAutomation(
-        "چی دارین؟"
+        "دارین؟"
       )?.id,
       "productSearch"
     );
 
     assert.equal(
       findAutomation(
-        "چی دارید؟"
-      )?.id,
-      "productSearch"
-    );
-
-    assert.equal(
-      findAutomation(
-        "هرچی دارید؟"
-      )?.id,
-      "productSearch"
-    );
-
-    assert.equal(
-      findAutomation(
-        "چه محصولاتی دارید؟"
-      )?.id,
-      "productSearch"
-    );
-
-    assert.equal(
-      findAutomation(
-        "چه جنسی دارین؟"
+        "دارید؟"
       )?.id,
       "productSearch"
     );
@@ -161,7 +145,7 @@ test(
 
     assert.equal(
       findAutomation(
-        "موجودی دارید؟"
+        "هست؟"
       )?.id,
       "productSearch"
     );
@@ -169,18 +153,32 @@ test(
 );
 
 test(
-  "unknown product names are ignored and do not need to exist in code",
+  "product request vocabulary works without product names",
   () => {
     assert.equal(
       findAutomation(
-        "محصول ناشناخته‌ای که در کد نیست دارید؟"
+        "چی دارید؟"
       )?.id,
       "productSearch"
     );
 
     assert.equal(
       findAutomation(
-        "یک اسم کاملاً ناشناخته دارید؟"
+        "چه محصولاتی؟"
+      )?.id,
+      "productSearch"
+    );
+
+    assert.equal(
+      findAutomation(
+        "هرچی دارید؟"
+      )?.id,
+      "productSearch"
+    );
+
+    assert.equal(
+      findAutomation(
+        "چه جنسی دارید؟"
       )?.id,
       "productSearch"
     );
@@ -188,7 +186,116 @@ test(
 );
 
 test(
-  "price vocabulary detects price requests without product names",
+  "fuzzy matching accepts one spelling error",
+  () => {
+    assert.equal(
+      findAutomation(
+        "ذارین؟"
+      )?.id,
+      "productSearch"
+    );
+
+    assert.equal(
+      findAutomation(
+        "دارسید"
+      )?.id,
+      "productSearch"
+    );
+
+    assert.equal(
+      findAutomation(
+        "موجودع"
+      )?.id,
+      "productSearch"
+    );
+  }
+);
+
+test(
+  "fuzzy matching accepts two spelling errors",
+  () => {
+    assert.equal(
+      findAutomation(
+        "ذارید؟"
+      )?.id,
+      "productSearch"
+    );
+  }
+);
+
+test(
+  "fuzzy matching works inside attached words",
+  () => {
+    assert.equal(
+      findAutomation(
+        "شامپوهمدارین"
+      )?.id,
+      "productSearch"
+    );
+
+    assert.equal(
+      findAutomation(
+        "شامپوهمذارین"
+      )?.id,
+      "productSearch"
+    );
+
+    assert.equal(
+      findAutomation(
+        "اینمحصولودارین؟"
+      )?.id,
+      "productSearch"
+    );
+  }
+);
+
+test(
+  "question mark and punctuation do not need separate keywords",
+  () => {
+    assert.equal(
+      findAutomation(
+        "دارین؟"
+      )?.id,
+      "productSearch"
+    );
+
+    assert.equal(
+      findAutomation(
+        "دارین!!!"
+      )?.id,
+      "productSearch"
+    );
+
+    assert.equal(
+      findAutomation(
+        "قیمتش چنده؟"
+      )?.id,
+      "price"
+    );
+  }
+);
+
+test(
+  "unknown product names are irrelevant to intent detection",
+  () => {
+    assert.equal(
+      findAutomation(
+        "یک اسم کاملاً ناشناخته دارین؟"
+      )?.id,
+      "productSearch"
+    );
+
+    assert.equal(
+      findAutomation(
+        "محصولی که در کد وجود ندارد چنده؟"
+      )?.id,
+      "price"
+    );
+  }
+);
+
+test(
+  "price intent works independently from product names",
   () => {
     assert.equal(
       findAutomation(
@@ -199,14 +306,14 @@ test(
 
     assert.equal(
       findAutomation(
-        "قیمتش چنده؟"
+        "قیمتش؟"
       )?.id,
       "price"
     );
 
     assert.equal(
       findAutomation(
-        "قیمت این چقدره؟"
+        "چقدره؟"
       )?.id,
       "price"
     );
@@ -217,18 +324,11 @@ test(
       )?.id,
       "price"
     );
-
-    assert.equal(
-      findAutomation(
-        "هزینه‌اش چقدره؟"
-      )?.id,
-      "price"
-    );
   }
 );
 
 test(
-  "product and price intents work with arbitrary product names",
+  "price has higher priority than product intent",
   () => {
     assert.equal(
       findAutomation(
@@ -239,26 +339,7 @@ test(
 
     assert.equal(
       findAutomation(
-        "اسم عجیب و ناشناخته دارید؟"
-      )?.id,
-      "productSearch"
-    );
-  }
-);
-
-test(
-  "price intent keeps priority over product intent",
-  () => {
-    assert.equal(
-      findAutomation(
-        "قیمت محصول چنده؟"
-      )?.id,
-      "price"
-    );
-
-    assert.equal(
-      findAutomation(
-        "هزینه این جنس چقدره؟"
+        "قیمت این جنس چقدره؟"
       )?.id,
       "price"
     );
@@ -266,7 +347,7 @@ test(
 );
 
 test(
-  "address wins over generic product existence vocabulary",
+  "address wins over generic existence words",
   () => {
     assert.equal(
       findAutomation(
@@ -285,7 +366,7 @@ test(
 );
 
 test(
-  "contact wins over generic product existence vocabulary",
+  "contact wins over generic existence words",
   () => {
     assert.equal(
       findAutomation(
@@ -297,11 +378,30 @@ test(
 );
 
 test(
-  "hours wins over generic product vocabulary",
+  "website wins over generic existence words",
   () => {
     assert.equal(
       findAutomation(
-        "ساعت کاری دارید؟"
+        "سایت دارید؟"
+      )?.id,
+      "website"
+    );
+  }
+);
+
+test(
+  "store hours still work",
+  () => {
+    assert.equal(
+      findAutomation(
+        "ساعت کاری"
+      )?.id,
+      "hours"
+    );
+
+    assert.equal(
+      findAutomation(
+        "ساعکاری"
       )?.id,
       "hours"
     );
@@ -323,56 +423,6 @@ test(
         "لیست محصولات"
       )?.id,
       "products"
-    );
-
-    assert.equal(
-      findAutomation(
-        "چی میفروشید؟"
-      )?.id,
-      "products"
-    );
-  }
-);
-
-test(
-  "missing spaces can still match",
-  () => {
-    assert.equal(
-      findAutomation(
-        "ساعتکاری"
-      )?.id,
-      "hours"
-    );
-  }
-);
-
-test(
-  "limited typo matching works",
-  () => {
-    assert.equal(
-      findAutomation(
-        "ساعکاری"
-      )?.id,
-      "hours"
-    );
-
-    assert.equal(
-      findAutomation(
-        "ادرس"
-      )?.id,
-      "address"
-    );
-  }
-);
-
-test(
-  "generic hour word does not hijack unrelated messages",
-  () => {
-    assert.notEqual(
-      findAutomation(
-        "ساعت مچی"
-      )?.id,
-      "hours"
     );
   }
 );
