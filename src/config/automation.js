@@ -79,6 +79,76 @@ export const automations = [
     priority: 98
   },
 
+  /**
+   * ارسال باید قبل از price بررسی شود.
+   *
+   * دلیل:
+   * عبارت‌هایی مثل:
+   * «هزینه ارسال»
+   * «قیمت ارسال»
+   *
+   * همزمان با price و shipping تطبیق دارند،
+   * ولی intent اصلی آن‌ها ارسال است.
+   */
+  {
+    id: "shipping",
+    enabled: true,
+
+    keywords: [
+      "ارسال",
+      "نحوه ارسال",
+      "شرایط ارسال",
+      "هزینه ارسال",
+      "قیمت ارسال",
+      "هزینه پست",
+      "هزینه پیک",
+      "هزینه ارسال سفارش",
+      "پست",
+      "پست پیشتاز",
+      "پیک",
+      "ارسال رایگان",
+      "ارسال درون شهری",
+      "ارسال درون‌شهری",
+      "ارسال سراسری",
+      "ارسال سفارش",
+      "روش ارسال",
+      "نحوه فرستادن",
+      "چطور ارسال میکنید",
+      "چطور ارسال می کنید",
+      "چطوری ارسال میکنید",
+      "چطوری ارسال می کنید",
+      "چجوری ارسال میکنید",
+      "چجوری ارسال می کنید"
+    ],
+
+    response: "shipping",
+    priority: 96
+  },
+
+  /**
+   * پرداخت بعد از shipping و قبل از price.
+   *
+   * برای عباراتی مثل:
+   * «مبلغ پرداخت»
+   * «هزینه پرداخت»
+   * «روش پرداخت»
+   *
+   * intent پرداخت باید برنده شود.
+   */
+  {
+    id: "payment",
+    enabled: true,
+
+    groups: {
+      any: [
+        vocabulary.payment.payment
+      ]
+    },
+
+    response: "payment",
+    priority: 95
+  },
+
   {
     id: "price",
     enabled: true,
@@ -91,53 +161,11 @@ export const automations = [
     },
 
     response: "price",
-    priority: 95
-  },
-
-  {
-    id: "products",
-    enabled: true,
-
-    keywords: [
-      "محصول",
-      "محصولات",
-      "جنس",
-      "جنسها",
-      "جنس ها",
-      "جنس‌ها",
-      "اجناس",
-      "اجناس رو بفرست",
-      "لیست محصولات",
-      "لیست اجناس",
-      "لیست کالا",
-      "کالا",
-      "کالاها",
-      "چی دارید",
-      "چه دارید",
-      "چه محصولاتی",
-      "چی میفروشید",
-      "چی می فروشید",
-      "چی می‌فروشید",
-      "چه میفروشید",
-      "چه می فروشید",
-      "چه می‌فروشید"
-    ],
-
-    response: "products",
-    priority: 90
+    priority: 94
   },
 
   /**
    * خرید و ثبت سفارش.
-   *
-   * این intent عمداً بالاتر از productSearch
-   * قرار دارد تا عبارت‌هایی مثل:
-   *
-   * میخوام بخرم
-   * چطور خرید کنم؟
-   * نحوه خرید
-   *
-   * وارد سفارش شوند.
    */
   {
     id: "order",
@@ -171,51 +199,40 @@ export const automations = [
     ],
 
     response: "order",
-    priority: 97
+    priority: 93
   },
 
-  /**
-   * پرداخت.
-   *
-   * این intent از خرید جداست.
-   *
-   * order:
-   * نحوه خرید و ثبت سفارش
-   *
-   * payment:
-   * نحوه پرداخت، واریز، شماره کارت، رسید و درگاه
-   */
   {
-    id: "payment",
+    id: "products",
     enabled: true,
 
-    groups: {
-      any: [
-        vocabulary.payment.payment
-      ]
-    },
+    keywords: [
+      "محصول",
+      "محصولات",
+      "جنس",
+      "جنسها",
+      "جنس ها",
+      "جنس‌ها",
+      "اجناس",
+      "اجناس رو بفرست",
+      "لیست محصولات",
+      "لیست اجناس",
+      "لیست کالا",
+      "کالا",
+      "کالاها",
+      "چی دارید",
+      "چه دارید",
+      "چه محصولاتی",
+      "چی میفروشید",
+      "چی می فروشید",
+      "چی می‌فروشید",
+      "چه میفروشید",
+      "چه می فروشید",
+      "چه می‌فروشید"
+    ],
 
-    response: "payment",
-    priority: 96
-  },
-
-  /**
-   * تشخیص درخواست محصول.
-   */
-  {
-    id: "productSearch",
-    enabled: true,
-
-    groups: {
-      any: [
-        vocabulary.product.existence,
-        vocabulary.product.request,
-        vocabulary.product.desire
-      ]
-    },
-
-    response: "productSearch",
-    priority: 86
+    response: "products",
+    priority: 90
   },
 
   {
@@ -275,29 +292,19 @@ export const automations = [
   },
 
   {
-    id: "shipping",
+    id: "productSearch",
     enabled: true,
 
-    keywords: [
-      "ارسال",
-      "نحوه ارسال",
-      "شرایط ارسال",
-      "هزینه ارسال",
-      "پست",
-      "پست پیشتاز",
-      "پیک",
-      "ارسال رایگان",
-      "ارسال درون شهری",
-      "ارسال درون‌شهری",
-      "ارسال سراسری",
-      "چطور ارسال میکنید",
-      "چطور ارسال می کنید",
-      "چطوری ارسال میکنید",
-      "چجوری ارسال میکنید"
-    ],
+    groups: {
+      any: [
+        vocabulary.product.existence,
+        vocabulary.product.request,
+        vocabulary.product.desire
+      ]
+    },
 
-    response: "shipping",
-    priority: 75
+    response: "productSearch",
+    priority: 86
   },
 
   {
